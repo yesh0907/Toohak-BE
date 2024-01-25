@@ -2,15 +2,16 @@ import { serve } from "@hono/node-server";
 import { Hono } from "hono";
 import { Server as IOServer } from "socket.io";
 import { logger } from "hono/logger";
+import { cors } from "hono/cors";
 
 // Create Hono App
 const app = new Hono();
 
-const cors = require("cors");
-app.use(cors());
-
 // Set up logger for all routes
 app.use("*", logger());
+
+// Set up cors for all routes
+app.use(cors());
 
 // Starter route
 app.get("/", (c) => {
