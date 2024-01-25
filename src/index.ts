@@ -48,7 +48,12 @@ httpServer.listen(port, () => {
 io.on("connection", (socket) => {
     console.log(`New client connected: ${socket.id}`);
 
-    socket.on("disconnect", () => {
-        console.log(`User disconnected: ${socket.id}`);
+    // Listen for the "joinRoom" message from the client
+    socket.on("joinRoom", (room_id) => {
+        console.log(`Room ID received: ${room_id}`);
     });
+
+    /* socket.on("disconnect", () => {
+        console.log(`User disconnected: ${socket.id}`);
+    }); */
 });
