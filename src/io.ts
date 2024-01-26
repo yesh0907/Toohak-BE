@@ -20,6 +20,14 @@ export const startIOServer = (httpServer: ServerType) => {
       console.log(`Room ID received: ${room_id}`);
     });
 
+    socket.on(WS_EVENTS.NEW_PLAYER, (playerID: string) => {
+        console.log(`Player ${playerID} joined the room`);
+    });
+
+    socket.on(WS_EVENTS.START_QUIZ, () => {
+        console.log(`${socket.id} started the game!`);
+    });
+
     socket.on("disconnect", () => {
       console.log(`User disconnected: ${socket.id}`);
     });
