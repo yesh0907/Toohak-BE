@@ -1,8 +1,8 @@
 import { serve } from "@hono/node-server";
 import { Hono } from "hono";
-import { Server as IOServer } from "socket.io";
 import { logger } from "hono/logger";
 import { cors } from "hono/cors";
+import { startIOServer } from "./io";
 
 // Create Hono App
 const app = new Hono();
@@ -32,29 +32,8 @@ const httpServer = serve({
 });
 
 // Create Socket.io server on top of the HTTP server
-const io = new IOServer(httpServer, {
-    // Cross-Origin Resource Sharing
-    cors: {
-        origin: "http://localhost:5173",
-        methods: ["GET", "POST"],
-        credentials: true,
-    },
-});
+startIOServer(httpServer);
 
 httpServer.listen(port, () => {
     console.log(`Toohak Backend is running on port ${port}`);
-});
-
-// Handle new web socket connection
-io.on("connection", (socket) => {
-    console.log(`New client connected: ${socket.id}`);
-
-    // Listen for the "joinRoom" message from the client
-    socket.on("joinRoom", (room_id) => {
-        console.log(`Room ID received: ${room_id}`);
-    });
-
-    /* socket.on("disconnect", () => {
-        console.log(`User disconnected: ${socket.id}`);
-    }); */
 });
