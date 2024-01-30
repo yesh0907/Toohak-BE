@@ -28,6 +28,30 @@ export const startIOServer = (httpServer: ServerType) => {
         console.log(`${socket.id} started the game!`);
     });
 
+    socket.on(WS_EVENTS.WAIT_FOR_QUIZ, () => {
+      console.log(`Waiting for game to start...`);
+    });
+
+    socket.on(WS_EVENTS.QUIZ_COMPLETED, () => {
+      console.log(`Quiz has completed!`);
+    });
+
+    socket.on(WS_EVENTS.START_TIMER, () => {
+      console.log(`Start timer`);
+    });
+
+    socket.on(WS_EVENTS.RECV_QUESTION, () => {
+      console.log(`Received question`);
+    });
+
+    socket.on(WS_EVENTS.NEW_QUESTION, () => {
+      console.log(`New question`);
+    });
+
+    socket.on(WS_EVENTS.SHOW_ANSWER, () => {
+      console.log(`Show answer`);
+    });
+
     socket.on("disconnect", () => {
       console.log(`User disconnected: ${socket.id}`);
     });
