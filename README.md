@@ -15,3 +15,6 @@
 
 ## Environment Variables
 **Please read up on the [Hono env Adapter Helper](https://hono.dev/helpers/adapter)**
+
+## Typegoose Resources
+- to learn more about Typegoose, read the [Typegoose getting started page](https://typegoose.github.io/typegoose/docs/guides/quick-start-guide)
