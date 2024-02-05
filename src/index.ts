@@ -38,8 +38,6 @@ const httpServer = serve({
 // Create Socket.io server on top of the HTTP server
 startIOServer(httpServer);
 
-instance.updateRoomState("65bf4e17c79ec741997bb3ba", 'inactive');
-
 httpServer.listen(port, () => {
     console.log(`Toohak Backend is running on port ${port}`);
 });
