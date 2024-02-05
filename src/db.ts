@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import * as dotenv from 'dotenv';
-import { Room, RoomModel } from './Room';
+import { RoomSchema, QuizSchema, QuestionSchema } from './database/schema';
+import { modelOptions, prop, PropType, getModelForClass } from "@typegoose/typegoose";
 
 // get env variables
 dotenv.config();
@@ -19,7 +20,7 @@ async function run() {
         await mongoose.connection.db.admin().command({ ping: 1 });
         console.log("successfully connected to DB");
     } finally {
-        await mongoose.disconnect();
+        // await mongoose.disconnect();
     }
 }
 
@@ -28,15 +29,15 @@ export const dbConnect = async () => {
 }
 
 class dbHandler {
-    private uri: string = process.env.MONGO_URI ?? 'mongodb://localhost:27017/myapp';
     private static instance: dbHandler | null = null;
     
-    private constructor() {
-        this.connect().catch((error) => {
-            console.error("Database connection error:", error);
-            process.exit(1); // Exit if cannot connect to the database
-        });
-    }
+    // private constructor() {
+    //     dbConnect();
+    //     // this.connect().catch((error) => {
+    //     //     console.error("Database connection error:", error);
+    //     //     process.exit(1);
+    //     // });
+    // }
 
     public static getInstance(): dbHandler {
         if (!dbHandler.instance) {
@@ -45,35 +46,55 @@ class dbHandler {
         return dbHandler.instance;
     }
 
-    public async connect(): Promise<void> {
-        await mongoose.connect(this.uri);
+    private async connect(): Promise<void> {
+        await mongoose.connect(uri);
     }
 
-    public async createRoom(roomData: Room): Promise<void> {
-        const room = new RoomModel(roomData);
+    public async createRoom(roomData: RoomSchema): Promise<void> {
+        await dbConnect();
+        const roomModel = getModelForClass(RoomSchema)
+        const room = new roomModel({ HostWsId: roomData.HostWsId, PlayerIds: roomData.PlayerIds, RoomState: roomData.RoomState});
         await room.save();
         console.log(`New room created with id: ${room._id}`);
     }
 
-    public async updateRoom(roomID: string, updateData: Partial<Room>): Promise<void> {
-        const res = await RoomModel.updateOne({ room_id: roomID }, { $set: updateData });
-        if (res.modifiedCount === 0) {
-            console.log("Room unchanged");
+    public async updateRoomRecord(room_id: string, updateData: any): Promise<void> {
+        //const mongoose = require('mongoose');
+        await dbConnect();
+        const roomModel = getModelForClass(RoomSchema)
+        var objectId = new mongoose.Types.ObjectId(room_id);
+        let updating = "string";
+        if (Array.isArray(updateData)) {
+            updating = "PlayerIds";
+        } else if (updateData === 'active' || updateData === 'inactive' || updateData === 'unavailable') {
+            updating = "RoomState";
         } else {
-            console.log(`Room with id ${roomID} updated (if exists)`);
+            updating = "HostWsId";
         }
+        console.log(objectId.toString());
+        const updateObject = { [updating]: updateData};
+        
+        try {
+            const res = await roomModel.updateOne({ _id: objectId }, updateObject);
+            console.log(res);
+        } catch (error) {
+            console.error("error:", error);
+        }
+        console.log(updateObject);
+        
     }
+
 }
 
 class dbInterface {
     private db: dbHandler = dbHandler.getInstance();
 
-    public async createRoomRecord(room_id: string, host_ws_id: string, player_ids: Map<string, string>, room_state: Room['room_state']): Promise<void> {
-        const roomRecord: Room = {
-            room_id,
-            host_ws_id,
-            player_ids,
-            room_state,
+    public async createRoomRecord(HostWsId: string, PlayerIds: Array<string>, RoomState: string): Promise<void> {
+        
+        const roomRecord: RoomSchema = {
+            HostWsId,
+            PlayerIds,
+            RoomState,
         };
 
         await this.db.createRoom(roomRecord).then(() => {
@@ -83,13 +104,18 @@ class dbInterface {
         });
     }
 
-    public async updateRoomRecord(room_id: string, updateData: Partial<Room>): Promise<void> {
-        await this.db.updateRoom(room_id, updateData).then(() => {
-            console.log(`Room record with id ${room_id} updated successfully.`);
-        }).catch((error) => {
-            console.error(`Failed to update room record with id ${room_id}:`, error);
-        });
+    public async updateRoomState(room_id: string, new_state: string) {
+        await this.db.updateRoomRecord(room_id, new_state);
     }
+
+    public async updateRoomHostId(room_id: string, new_host: string) {
+        await this.db.updateRoomRecord(room_id, new_host);
+    }
+
+    public async updateRoomPlayerIds(room_id: string, new_pid: Array<string>) {
+        await this.db.updateRoomRecord(room_id, new_pid);
+    }
+
 }
 
 export { dbHandler, dbInterface };
