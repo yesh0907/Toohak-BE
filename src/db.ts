@@ -38,52 +38,62 @@ class dbHandler {
     }
 
     public async createRoom(roomData: RoomSchema): Promise<void> {
-        const roomModel = getModelForClass(RoomSchema);
-        const room = new roomModel({ HostWsId: roomData.HostWsId, PlayerIds: roomData.PlayerIds, RoomState: roomData.RoomState});
-        await room.save();
-        console.log(`New room created with id: ${room._id}`);
+        try {
+            const roomModel = getModelForClass(RoomSchema);
+            const room = new roomModel({ HostWsId: roomData.HostWsId, PlayerIds: roomData.PlayerIds, RoomState: roomData.RoomState});
+            await room.save();
+            console.log(`New room created with id (handler): ${room._id}`);
+        } catch (error) {
+            console.error("Room create error (handler):", error);
+        }
     }
 
     public async updateRoomRecord(roomId: string, updateData: {
         RoomState?: string,
-        PlayerIds?: string[],
+        PlayerIds?: Array<string>,
         HostWsId?: string
     }): Promise<void> {
         const roomModel = getModelForClass(RoomSchema);  
         try {
             const res = await roomModel.updateOne({ _id: roomId }, updateData);
-            console.log("Room updated");
+            console.log(`Room updated with id (handler): ${roomId}`);
         } catch (error) {
-            console.error("error:", error);
+            console.error("Room update error (handler):", error);
         }
     }
 
     public async createQuiz(quizData: QuizSchema): Promise<void> {
-        console.log("test3");
-        const quizModel = getModelForClass(QuizSchema);
-        console.log("test");
-        const quiz = new quizModel({ Questions: quizData.Questions });
-        await quiz.save();
-        console.log(`New quiz created with id: ${quiz._id}`);
+        try {
+            const quizModel = getModelForClass(QuizSchema);
+            const quiz = new quizModel({ Questions: quizData.Questions });
+            await quiz.save();
+            console.log(`New quiz created with id (handler): ${quiz._id}`);
+        } catch (error) {
+            console.error("Quiz create error (handler):", error);
+        }
     }
 
     public async updateQuizList(quizId: string, updateData: {
-        Questions?: string[],
+        Questions?: Array<string>,
     }): Promise<void> {
         const quizModel = getModelForClass(QuizSchema);
         try {
             const res = await quizModel.updateOne({ _id: quizId }, updateData);
-            console.log("Quiz updated");
+            console.log(`Quiz updated with id (handler): ${quizId}`);
         } catch (error) {
-            console.error("error:", error);
+            console.error("Quiz update error (handler):", error);
         }
     }
 
     public async createQuestionHandler(questionData: QuestionSchema): Promise<void> {
-        const questionModel = getModelForClass(QuestionSchema);
-        const question = new questionModel({ Question: questionData.Question, PossibleAnswers: questionData.PossibleAnswers, CorrectAnswer: questionData.CorrectAnswer, QuestionType: questionData.QuestionType});
-        await question.save();
-        console.log(`New question created with id: ${question._id}`);
+        try {
+            const questionModel = getModelForClass(QuestionSchema);
+            const question = new questionModel({ Question: questionData.Question, PossibleAnswers: questionData.PossibleAnswers, CorrectAnswer: questionData.CorrectAnswer, QuestionType: questionData.QuestionType});
+            await question.save();
+            console.log(`New question created with id (handler): ${question._id}`);
+        } catch (error) {
+            console.error("Question create error (handler):", error);
+        }
     }
 
     public async updateQuestionHandler(questionId: string, updateData: {
@@ -95,9 +105,9 @@ class dbHandler {
         const questionModel = getModelForClass(QuestionSchema);
         try {
             const res = await questionModel.updateOne({ _id: questionId }, updateData);
-            console.log("Question updated");
+            console.log(`Question updated with id (handler): ${questionId}`);
         } catch (error) {
-            console.error("error", error);
+            console.error("Question update error (handler):", error);
         }
     }
 
@@ -106,46 +116,45 @@ class dbHandler {
 class dbInterface {
     private db: dbHandler = dbHandler.getInstance();
 
-    public async createRoomRecord(HostWsId: string, PlayerIds: Array<string>, RoomState: string): Promise<void> {
+    public async createRoomRecord(hostWsId: string, playerIds: Array<string>, roomState: string): Promise<void> {
         const roomRecord: RoomSchema = {
-            HostWsId,
-            PlayerIds,
-            RoomState,
+            HostWsId: hostWsId,
+            PlayerIds: playerIds,
+            RoomState: roomState,
         };
 
         try {
             await this.db.createRoom(roomRecord);
-            console.log(`Room created`);
+            console.log(`Room created (interface)`);
         } catch (error) {
-            console.error("Failed to create room error:", error);
+            console.error("Failed to create room error (interface):", error);
         }
     }
 
-    public async updateRoomState(room_id: string, new_state: string) {
-        const updateObject = { RoomState: new_state };
-        await this.db.updateRoomRecord(room_id, updateObject);
+    public async updateRoomState(roomId: string, newState: string) {
+        const updateObject = { RoomState: newState };
+        await this.db.updateRoomRecord(roomId, updateObject);
     }
 
-    public async updateRoomHostId(room_id: string, new_host: string) {
-        const updateObject = { HostWsId: new_host };
-        await this.db.updateRoomRecord(room_id, updateObject);
+    public async updateRoomHostId(roomId: string, newHost: string) {
+        const updateObject = { HostWsId: newHost };
+        await this.db.updateRoomRecord(roomId, updateObject);
     }
 
-    public async updateRoomPlayerIds(room_id: string, new_pid: Array<string>) {
-        const updateObject = { PlayerIds: new_pid };
-        await this.db.updateRoomRecord(room_id, updateObject);
+    public async updateRoomPlayerIds(roomId: string, playerIds: Array<string>) {
+        const updateObject = { PlayerIds: playerIds };
+        await this.db.updateRoomRecord(roomId, updateObject);
     }
 
-    public async createQuizList(Questions: Array<string>): Promise<void> {
+    public async createQuizList(questions: Array<string>): Promise<void> {
         const quizList: QuizSchema = {
-            Questions,
+            Questions: questions,
         };
-        console.log("test2");
         try {
             await this.db.createQuiz(quizList);
-            console.log('Quiz created');
+            console.log('Quiz created (interface)');
         } catch (error) {
-            console.error("Failed to create quiz error:", error);
+            console.error("Failed to create quiz error (interface):", error);
         }
     }
 
@@ -154,19 +163,19 @@ class dbInterface {
         await this.db.updateQuizList(quizId, updateObject);
     }
 
-    public async createQuestion(Question: string, PossibleAnswers: Map<string, string>, CorrectAnswer: string, QuestionType: string) {
+    public async createQuestion(question: string, possibleAnswers: Map<string, string>, correctAnswer: string, questionType: string) {
         const questionMetadata: QuestionSchema = {
-            Question,
-            PossibleAnswers,
-            CorrectAnswer,
-            QuestionType,
+            Question: question,
+            PossibleAnswers: possibleAnswers,
+            CorrectAnswer: correctAnswer,
+            QuestionType: questionType,
         }
 
         try {
             await this.db.createQuestionHandler(questionMetadata);
-            console.log('Question created');
+            console.log('Question created (interface)');
         } catch (error) {
-            console.error("Failed to create question:", error);
+            console.error("Failed to create question (interface):", error);
         }
     }
 
