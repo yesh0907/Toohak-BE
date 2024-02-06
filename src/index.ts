@@ -3,10 +3,10 @@ import { Hono } from "hono";
 import { logger } from "hono/logger";
 import { cors } from "hono/cors";
 import { startIOServer } from "./io";
-import { dbInterface } from "./db";
+import { DbInterface } from "./db";
 
 // Connect to DB
-const instance = new dbInterface();
+const db = new DbInterface();
 
 // Create Hono App
 const app = new Hono();

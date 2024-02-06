@@ -12,8 +12,8 @@ if (process.env.MONGO_URI === undefined) {
 
 const uri = process.env.MONGO_URI;
 
-class dbHandler {
-    private static instance: dbHandler | null = null;
+class DbHandler {
+    private static instance: DbHandler | null = null;
     
     private constructor() {
         this.connect().catch((error) => {
@@ -22,11 +22,11 @@ class dbHandler {
         });
     }
 
-    public static getInstance(): dbHandler {
-        if (!dbHandler.instance) {
-            dbHandler.instance = new dbHandler();
+    public static getInstance(): DbHandler {
+        if (!DbHandler.instance) {
+            DbHandler.instance = new DbHandler();
         }
-        return dbHandler.instance;
+        return DbHandler.instance;
     }
 
     private async connect(): Promise<void> {
@@ -40,7 +40,7 @@ class dbHandler {
     public async createRoom(roomData: RoomSchema): Promise<void> {
         try {
             const roomModel = getModelForClass(RoomSchema);
-            const room = new roomModel({ HostWsId: roomData.HostWsId, PlayerIds: roomData.PlayerIds, RoomState: roomData.RoomState});
+            const room = await roomModel.create(roomData);
             await room.save();
             console.log(`New room created with id (handler): ${room._id}`);
         } catch (error) {
@@ -48,7 +48,7 @@ class dbHandler {
         }
     }
 
-    public async updateRoomRecord(roomId: string, updateData: {
+    public async updateRoom(roomId: string, updateData: {
         RoomState?: string,
         PlayerIds?: Array<string>,
         HostWsId?: string
@@ -65,7 +65,7 @@ class dbHandler {
     public async createQuiz(quizData: QuizSchema): Promise<void> {
         try {
             const quizModel = getModelForClass(QuizSchema);
-            const quiz = new quizModel({ Questions: quizData.Questions });
+            const quiz = await quizModel.create(quizData);
             await quiz.save();
             console.log(`New quiz created with id (handler): ${quiz._id}`);
         } catch (error) {
@@ -88,7 +88,7 @@ class dbHandler {
     public async createQuestionHandler(questionData: QuestionSchema): Promise<void> {
         try {
             const questionModel = getModelForClass(QuestionSchema);
-            const question = new questionModel({ Question: questionData.Question, PossibleAnswers: questionData.PossibleAnswers, CorrectAnswer: questionData.CorrectAnswer, QuestionType: questionData.QuestionType});
+            const question = await questionModel.create(questionData);
             await question.save();
             console.log(`New question created with id (handler): ${question._id}`);
         } catch (error) {
@@ -113,10 +113,10 @@ class dbHandler {
 
 }
 
-class dbInterface {
-    private db: dbHandler = dbHandler.getInstance();
+class DbInterface {
+    private db: DbHandler = DbHandler.getInstance();
 
-    public async createRoomRecord(hostWsId: string, playerIds: Array<string>, roomState: string): Promise<void> {
+    public async createRoom(hostWsId: string, playerIds: Array<string>, roomState: string): Promise<void> {
         const roomRecord: RoomSchema = {
             HostWsId: hostWsId,
             PlayerIds: playerIds,
@@ -133,20 +133,20 @@ class dbInterface {
 
     public async updateRoomState(roomId: string, newState: string) {
         const updateObject = { RoomState: newState };
-        await this.db.updateRoomRecord(roomId, updateObject);
+        await this.db.updateRoom(roomId, updateObject);
     }
 
     public async updateRoomHostId(roomId: string, newHost: string) {
         const updateObject = { HostWsId: newHost };
-        await this.db.updateRoomRecord(roomId, updateObject);
+        await this.db.updateRoom(roomId, updateObject);
     }
 
     public async updateRoomPlayerIds(roomId: string, playerIds: Array<string>) {
         const updateObject = { PlayerIds: playerIds };
-        await this.db.updateRoomRecord(roomId, updateObject);
+        await this.db.updateRoom(roomId, updateObject);
     }
 
-    public async createQuizList(questions: Array<string>): Promise<void> {
+    public async createQuiz(questions: Array<string>): Promise<void> {
         const quizList: QuizSchema = {
             Questions: questions,
         };
@@ -179,7 +179,7 @@ class dbInterface {
         }
     }
 
-    public async updateQuestion(questionId: string, newQuestion: string) {
+    public async updateQuestionPrompt(questionId: string, newQuestion: string) {
         const updateObject = { Question: newQuestion };
         await this.db.updateQuestionHandler(questionId, updateObject);
     }
@@ -201,4 +201,4 @@ class dbInterface {
 
 }
 
-export { dbHandler, dbInterface };
+export { DbHandler, DbInterface };
