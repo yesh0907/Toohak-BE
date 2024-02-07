@@ -14,12 +14,16 @@ const uri = process.env.MONGO_URI;
 
 class DbHandler {
     private static instance: DbHandler | null = null;
+
+    private dbName?: string;
     
     private constructor() {
-        this.connect().catch((error) => {
-            console.error("Database connection error:", error);
-            process.exit(1);
-        });
+        try {
+            this.connect();
+            console.log(`Successful connection to database`);
+        } catch (error) {
+            console.error(`Database connection error:`, error);
+        };
     }
 
     public static getInstance(): DbHandler {
@@ -30,7 +34,8 @@ class DbHandler {
     }
 
     private async connect(): Promise<void> {
-        await mongoose.connect(uri);
+        const connection = await mongoose.connect(uri);
+        this.dbName = connection.connection.db.databaseName;
     }
 
     private async disconnect(): Promise<void> {
@@ -41,10 +46,9 @@ class DbHandler {
         try {
             const roomModel = getModelForClass(RoomSchema);
             const room = await roomModel.create(roomData);
-            await room.save();
-            console.log(`New room created with id (handler): ${room._id}`);
+            console.log(`New room created with id: ${room._id}, database: ${this.dbName}, collection: ${roomModel.collection.collectionName}`);
         } catch (error) {
-            console.error("Room create error (handler):", error);
+            console.error(`Room creation error in database: ${this.dbName}:`, error);
         }
     }
 
@@ -56,32 +60,31 @@ class DbHandler {
         const roomModel = getModelForClass(RoomSchema);  
         try {
             const res = await roomModel.updateOne({ _id: roomId }, updateData);
-            console.log(`Room updated with id (handler): ${roomId}`);
+            console.log(`Room successfully updated with id: ${roomId}, database: ${this.dbName}, collection: ${roomModel.collection.collectionName}, updated fields: ${Object.keys(updateData).join(', ')}`);
         } catch (error) {
-            console.error("Room update error (handler):", error);
+            console.error(`Failed to update room fields: ${Object.keys(updateData).join(', ')}, with id: ${roomId}, database: ${this.dbName}, collection: ${roomModel.collection.collectionName}, error:`, error);
         }
     }
 
-    public async createQuiz(quizData: QuizSchema): Promise<void> {
+    public async createQuizQuestionIds(quizData: QuizSchema): Promise<void> {
         try {
             const quizModel = getModelForClass(QuizSchema);
             const quiz = await quizModel.create(quizData);
-            await quiz.save();
-            console.log(`New quiz created with id (handler): ${quiz._id}`);
+            console.log(`New quiz created with id: ${quiz._id}, database: ${this.dbName}, collection: ${quizModel.collection.collectionName}`);
         } catch (error) {
-            console.error("Quiz create error (handler):", error);
+            console.error(`Quiz creation error in database: ${this.dbName}:`, error);
         }
     }
 
-    public async updateQuizList(quizId: string, updateData: {
+    public async updateQuizQuestionIds(quizId: string, updateData: {
         Questions?: Array<string>,
     }): Promise<void> {
         const quizModel = getModelForClass(QuizSchema);
         try {
             const res = await quizModel.updateOne({ _id: quizId }, updateData);
-            console.log(`Quiz updated with id (handler): ${quizId}`);
+            console.log(`Quiz successfully updated with id: ${quizId}, database: ${this.dbName}, collection: ${quizModel.collection.collectionName}, updated fields: ${Object.keys(updateData).join(', ')}`);
         } catch (error) {
-            console.error("Quiz update error (handler):", error);
+            console.error(`Failed to update quiz fields: ${Object.keys(updateData).join(', ')}, with id: ${quizId}, database: ${this.dbName}, collection: ${quizModel.collection.collectionName}, error:`, error);
         }
     }
 
@@ -89,10 +92,9 @@ class DbHandler {
         try {
             const questionModel = getModelForClass(QuestionSchema);
             const question = await questionModel.create(questionData);
-            await question.save();
-            console.log(`New question created with id (handler): ${question._id}`);
+            console.log(`New question created with id: ${question._id}, database: ${this.dbName}, collection: ${questionModel.collection.collectionName}`);
         } catch (error) {
-            console.error("Question create error (handler):", error);
+            console.error(`Question creation error in database: ${this.dbName}:`, error);
         }
     }
 
@@ -105,16 +107,20 @@ class DbHandler {
         const questionModel = getModelForClass(QuestionSchema);
         try {
             const res = await questionModel.updateOne({ _id: questionId }, updateData);
-            console.log(`Question updated with id (handler): ${questionId}`);
+            console.log(`Question successfully updated with id: ${questionId}, database: ${this.dbName}, collection: ${questionModel.collection.collectionName}, updated fields: ${Object.keys(updateData).join(', ')}`);
         } catch (error) {
-            console.error("Question update error (handler):", error);
+            console.error(`Failed to update question fields: ${Object.keys(updateData).join(', ')}, with id ${questionId}, database: ${this.dbName}, collection: ${questionModel.collection.collectionName}, error:`, error);
         }
     }
 
 }
 
 class DbInterface {
-    private db: DbHandler = DbHandler.getInstance();
+    private db: DbHandler;
+    
+    constructor() {
+        this.db = DbHandler.getInstance();
+    }
 
     public async createRoom(hostWsId: string, playerIds: Array<string>, roomState: string): Promise<void> {
         const roomRecord: RoomSchema = {
@@ -125,9 +131,9 @@ class DbInterface {
 
         try {
             await this.db.createRoom(roomRecord);
-            console.log(`Room created (interface)`);
+            console.log(`Room successfully created with HostWsId: ${hostWsId}, Player Ids: ${playerIds}, Room State: ${roomState}`);
         } catch (error) {
-            console.error("Failed to create room error (interface):", error);
+            console.error("Failed to create room, error:", error);
         }
     }
 
@@ -146,21 +152,21 @@ class DbInterface {
         await this.db.updateRoom(roomId, updateObject);
     }
 
-    public async createQuiz(questions: Array<string>): Promise<void> {
+    public async createQuizQuestionIds(questionIds: Array<string>): Promise<void> {
         const quizList: QuizSchema = {
-            Questions: questions,
+            Questions: questionIds,
         };
         try {
-            await this.db.createQuiz(quizList);
-            console.log('Quiz created (interface)');
+            await this.db.createQuizQuestionIds(quizList);
+            console.log(`Quiz successfully created with Question Id List: ${questionIds}`);
         } catch (error) {
-            console.error("Failed to create quiz error (interface):", error);
+            console.error("Failed to create quiz, error:", error);
         }
     }
 
-    public async updateQuiz(quizId: string, newQuiz: Array<string>) {
-        const updateObject = { Questions: newQuiz };
-        await this.db.updateQuizList(quizId, updateObject);
+    public async updateQuizQuestionIds(quizId: string, newQuizQuestionIds: Array<string>) {
+        const updateObject = { Questions: newQuizQuestionIds };
+        await this.db.updateQuizQuestionIds(quizId, updateObject);
     }
 
     public async createQuestion(question: string, possibleAnswers: Map<string, string>, correctAnswer: string, questionType: string) {
@@ -173,9 +179,9 @@ class DbInterface {
 
         try {
             await this.db.createQuestionHandler(questionMetadata);
-            console.log('Question created (interface)');
+            console.log(`Question successfully created with Prompt: ${question}, Possible Answers: ${Array.from(possibleAnswers.keys())}, Correct Answer: ${correctAnswer}, Question Type: ${questionType}`);
         } catch (error) {
-            console.error("Failed to create question (interface):", error);
+            console.error("Failed to create question, error:", error);
         }
     }
 
