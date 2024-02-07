@@ -14,8 +14,6 @@ const uri = process.env.MONGO_URI;
 
 class DbHandler {
     private static instance: DbHandler | null = null;
-
-    private dbName?: string;
     
     private constructor() {
         try {
@@ -35,7 +33,6 @@ class DbHandler {
 
     private async connect(): Promise<void> {
         const connection = await mongoose.connect(uri);
-        this.dbName = connection.connection.db.databaseName;
     }
 
     private async disconnect(): Promise<void> {
@@ -46,9 +43,9 @@ class DbHandler {
         try {
             const roomModel = getModelForClass(RoomSchema);
             const room = await roomModel.create(roomData);
-            console.log(`New room created with id: ${room._id}, database: ${this.dbName}, collection: ${roomModel.collection.collectionName}`);
+            console.log(`New room created with id: ${room._id}, collection: ${roomModel.collection.collectionName}`);
         } catch (error) {
-            console.error(`Room creation error in database: ${this.dbName}:`, error);
+            console.error(`Room creation error:`, error);
         }
     }
 
@@ -60,9 +57,9 @@ class DbHandler {
         const roomModel = getModelForClass(RoomSchema);  
         try {
             const res = await roomModel.updateOne({ _id: roomId }, updateData);
-            console.log(`Room successfully updated with id: ${roomId}, database: ${this.dbName}, collection: ${roomModel.collection.collectionName}, updated fields: ${Object.keys(updateData).join(', ')}`);
+            console.log(`Room successfully updated with id: ${roomId}, collection: ${roomModel.collection.collectionName}, updated fields: ${Object.keys(updateData).join(', ')}`);
         } catch (error) {
-            console.error(`Failed to update room fields: ${Object.keys(updateData).join(', ')}, with id: ${roomId}, database: ${this.dbName}, collection: ${roomModel.collection.collectionName}, error:`, error);
+            console.error(`Failed to update room fields: ${Object.keys(updateData).join(', ')}, with id: ${roomId}, collection: ${roomModel.collection.collectionName}, error:`, error);
         }
     }
 
@@ -70,9 +67,9 @@ class DbHandler {
         try {
             const quizModel = getModelForClass(QuizSchema);
             const quiz = await quizModel.create(quizData);
-            console.log(`New quiz created with id: ${quiz._id}, database: ${this.dbName}, collection: ${quizModel.collection.collectionName}`);
+            console.log(`New quiz created with id: ${quiz._id}, collection: ${quizModel.collection.collectionName}`);
         } catch (error) {
-            console.error(`Quiz creation error in database: ${this.dbName}:`, error);
+            console.error(`Quiz creation error:`, error);
         }
     }
 
@@ -82,9 +79,9 @@ class DbHandler {
         const quizModel = getModelForClass(QuizSchema);
         try {
             const res = await quizModel.updateOne({ _id: quizId }, updateData);
-            console.log(`Quiz successfully updated with id: ${quizId}, database: ${this.dbName}, collection: ${quizModel.collection.collectionName}, updated fields: ${Object.keys(updateData).join(', ')}`);
+            console.log(`Quiz successfully updated with id: ${quizId}, collection: ${quizModel.collection.collectionName}, updated fields: ${Object.keys(updateData).join(', ')}`);
         } catch (error) {
-            console.error(`Failed to update quiz fields: ${Object.keys(updateData).join(', ')}, with id: ${quizId}, database: ${this.dbName}, collection: ${quizModel.collection.collectionName}, error:`, error);
+            console.error(`Failed to update quiz fields: ${Object.keys(updateData).join(', ')}, with id: ${quizId}, collection: ${quizModel.collection.collectionName}, error:`, error);
         }
     }
 
@@ -92,9 +89,9 @@ class DbHandler {
         try {
             const questionModel = getModelForClass(QuestionSchema);
             const question = await questionModel.create(questionData);
-            console.log(`New question created with id: ${question._id}, database: ${this.dbName}, collection: ${questionModel.collection.collectionName}`);
+            console.log(`New question created with id: ${question._id}, collection: ${questionModel.collection.collectionName}`);
         } catch (error) {
-            console.error(`Question creation error in database: ${this.dbName}:`, error);
+            console.error(`Question creation error:`, error);
         }
     }
 
@@ -107,9 +104,9 @@ class DbHandler {
         const questionModel = getModelForClass(QuestionSchema);
         try {
             const res = await questionModel.updateOne({ _id: questionId }, updateData);
-            console.log(`Question successfully updated with id: ${questionId}, database: ${this.dbName}, collection: ${questionModel.collection.collectionName}, updated fields: ${Object.keys(updateData).join(', ')}`);
+            console.log(`Question successfully updated with id: ${questionId}, collection: ${questionModel.collection.collectionName}, updated fields: ${Object.keys(updateData).join(', ')}`);
         } catch (error) {
-            console.error(`Failed to update question fields: ${Object.keys(updateData).join(', ')}, with id ${questionId}, database: ${this.dbName}, collection: ${questionModel.collection.collectionName}, error:`, error);
+            console.error(`Failed to update question fields: ${Object.keys(updateData).join(', ')}, with id ${questionId}, collection: ${questionModel.collection.collectionName}, error:`, error);
         }
     }
 
