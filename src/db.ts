@@ -63,7 +63,7 @@ class DbHandler {
         }
     }
 
-    public async createQuizQuestionIds(quizData: QuizSchema): Promise<void> {
+    public async createQuiz(quizData: QuizSchema): Promise<void> {
         try {
             const quizModel = getModelForClass(QuizSchema);
             const quiz = await quizModel.create(quizData);
@@ -85,7 +85,7 @@ class DbHandler {
         }
     }
 
-    public async createQuestionHandler(questionData: QuestionSchema): Promise<void> {
+    public async createQuestion(questionData: QuestionSchema): Promise<void> {
         try {
             const questionModel = getModelForClass(QuestionSchema);
             const question = await questionModel.create(questionData);
@@ -95,7 +95,7 @@ class DbHandler {
         }
     }
 
-    public async updateQuestionHandler(questionId: string, updateData: {
+    public async updateQuestion(questionId: string, updateData: {
         Question?: string,
         PossibleAnswers?: Map<string, string>,
         CorrectAnswer?: string,
@@ -149,12 +149,12 @@ class DbInterface {
         await this.db.updateRoom(roomId, updateObject);
     }
 
-    public async createQuizQuestionIds(questionIds: Array<string>): Promise<void> {
+    public async createQuiz(questionIds: Array<string>): Promise<void> {
         const quizList: QuizSchema = {
             Questions: questionIds,
         };
         try {
-            await this.db.createQuizQuestionIds(quizList);
+            await this.db.createQuiz(quizList);
             console.log(`Quiz successfully created with Question Id List: ${questionIds}`);
         } catch (error) {
             console.error("Failed to create quiz, error:", error);
@@ -175,7 +175,7 @@ class DbInterface {
         }
 
         try {
-            await this.db.createQuestionHandler(questionMetadata);
+            await this.db.createQuestion(questionMetadata);
             console.log(`Question successfully created with Prompt: ${question}, Possible Answers: ${Array.from(possibleAnswers.keys())}, Correct Answer: ${correctAnswer}, Question Type: ${questionType}`);
         } catch (error) {
             console.error("Failed to create question, error:", error);
@@ -184,22 +184,22 @@ class DbInterface {
 
     public async updateQuestionPrompt(questionId: string, newQuestion: string) {
         const updateObject = { Question: newQuestion };
-        await this.db.updateQuestionHandler(questionId, updateObject);
+        await this.db.updateQuestion(questionId, updateObject);
     }
 
     public async updateQuestionAnswers(questionId: string, newAns: Map<string, string>) {
         const updateObject = { PossibleAnswers: newAns };
-        await this.db.updateQuestionHandler(questionId, updateObject);
+        await this.db.updateQuestion(questionId, updateObject);
     }
 
     public async updateQuestionCorrect(questionId: string, newCorrect: string) {
         const updateObject = { CorrectAnswer: newCorrect };
-        await this.db.updateQuestionHandler(questionId, updateObject);
+        await this.db.updateQuestion(questionId, updateObject);
     }
 
     public async updateQuestionType(questionId: string, questionType: string) {
         const updateObject = { QuestionType: questionType };
-        await this.db.updateQuestionHandler(questionId, updateObject);
+        await this.db.updateQuestion(questionId, updateObject);
     }
 
 }
