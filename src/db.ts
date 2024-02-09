@@ -49,6 +49,18 @@ class DbHandler {
         }
     }
 
+    public async getRoom(roomId: string): Promise<RoomSchema | null> {
+        try {
+            const roomModel = getModelForClass(RoomSchema);
+            const room = await roomModel.findById(roomId);
+            console.log(`Returning quiz: ${roomId}`)
+            return room;
+          } catch (error) {
+            console.error(`Error retrieving room by ID (${roomId}):`, error);
+            return null;
+          }
+    }
+
     public async updateRoom(roomId: string, updateData: {
         RoomState?: string,
         PlayerIds?: Array<string>,
@@ -155,6 +167,16 @@ class DbInterface {
             console.log(`Room successfully created with HostWsId: ${hostWsId}, Player Ids: ${playerIds}, Room State: ${roomState}`);
         } catch (error) {
             console.error("Failed to create room, error:", error);
+        }
+    }
+
+    public async getRoom(roomId: string): Promise<RoomSchema | null> {
+        try {
+            const room = await this.db.getRoom(roomId);
+            return room;
+        } catch (error) {
+            console.log(`Failed to retrieve room: ${roomId}, error: ${error}`);
+            return null;
         }
     }
 
