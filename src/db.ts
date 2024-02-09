@@ -73,6 +73,17 @@ class DbHandler {
         }
     }
 
+    public async getQuizById(quizId: string): Promise<QuizSchema | null> {
+        try {
+            const quizModel = getModelForClass(QuizSchema);
+            const quiz = await quizModel.findById(quizId);
+            return quiz;
+          } catch (error) {
+            console.error(`Error retrieving quiz by ID (${quizId}):`, error);
+            return null;
+          }
+    }
+
     public async updateQuizQuestionIds(quizId: string, updateData: {
         Questions?: Array<string>,
     }): Promise<void> {
@@ -158,6 +169,16 @@ class DbInterface {
             console.log(`Quiz successfully created with Question Id List: ${questionIds}`);
         } catch (error) {
             console.error("Failed to create quiz, error:", error);
+        }
+    }
+
+    public async getQuizById(quizId: string): Promise<QuizSchema | null> {
+        try {
+            const quiz = await this.db.getQuizById(quizId);
+            return quiz;
+        } catch (error) {
+            console.log(`Failed to retrieve quiz: ${quizId}, error: ${error}`);
+            return null;
         }
     }
 
