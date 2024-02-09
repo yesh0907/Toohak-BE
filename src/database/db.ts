@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 import * as dotenv from 'dotenv';
-import { RoomSchema, QuizSchema, QuestionSchema } from './database/schema';
+import { RoomSchema, QuizSchema, QuestionSchema } from './schema';
 import { getModelForClass } from "@typegoose/typegoose";
 
 dotenv.config();
@@ -49,6 +49,18 @@ class DbHandler {
         }
     }
 
+    public async getRoom(roomId: string): Promise<RoomSchema | null> {
+        try {
+            const roomModel = getModelForClass(RoomSchema);
+            const room = await roomModel.findById(roomId);
+            console.log(`Returning quiz: ${roomId}`)
+            return room;
+          } catch (error) {
+            console.error(`Error retrieving room by ID (${roomId}):`, error);
+            return null;
+          }
+    }
+
     public async updateRoom(roomId: string, updateData: {
         RoomState?: string,
         PlayerIds?: Array<string>,
@@ -73,6 +85,18 @@ class DbHandler {
         }
     }
 
+    public async getQuiz(quizId: string): Promise<QuizSchema | null> {
+        try {
+            const quizModel = getModelForClass(QuizSchema);
+            const quiz = await quizModel.findById(quizId);
+            console.log(`Returning quiz: ${quizId}`)
+            return quiz;
+          } catch (error) {
+            console.error(`Error retrieving quiz by ID (${quizId}):`, error);
+            return null;
+          }
+    }
+
     public async updateQuizQuestionIds(quizId: string, updateData: {
         Questions?: Array<string>,
     }): Promise<void> {
@@ -92,6 +116,18 @@ class DbHandler {
             console.log(`New question created with id: ${question._id}, collection: ${questionModel.collection.collectionName}`);
         } catch (error) {
             console.error(`Question creation error:`, error);
+        }
+    }
+
+    public async getQuestion(questionId: QuestionSchema) : Promise<QuestionSchema | null> {
+        try {
+            const questionModel = getModelForClass(QuestionSchema);
+            const question = questionModel.findById(questionId);
+            console.log(`Returning question: ${questionId}`);
+            return  question;
+        } catch (error) {
+            console.error(`Error retrieving question by ID (${questionId}):`, error);
+            return null;
         }
     }
 
@@ -134,6 +170,16 @@ class DbInterface {
         }
     }
 
+    public async getRoom(roomId: string): Promise<RoomSchema | null> {
+        try {
+            const room = await this.db.getRoom(roomId);
+            return room;
+        } catch (error) {
+            console.log(`Failed to retrieve room: ${roomId}, error: ${error}`);
+            return null;
+        }
+    }
+
     public async updateRoomState(roomId: string, newState: string) {
         const updateObject = { RoomState: newState };
         await this.db.updateRoom(roomId, updateObject);
@@ -161,6 +207,16 @@ class DbInterface {
         }
     }
 
+    public async getQuiz(quizId: string): Promise<QuizSchema | null> {
+        try {
+            const quiz = await this.db.getQuiz(quizId);
+            return quiz;
+        } catch (error) {
+            console.log(`Failed to retrieve quiz: ${quizId}, error: ${error}`);
+            return null;
+        }
+    }
+
     public async updateQuizQuestionIds(quizId: string, newQuizQuestionIds: Array<string>) {
         const updateObject = { Questions: newQuizQuestionIds };
         await this.db.updateQuizQuestionIds(quizId, updateObject);
@@ -179,6 +235,16 @@ class DbInterface {
             console.log(`Question successfully created with Prompt: ${question}, Possible Answers: ${Array.from(possibleAnswers.keys())}, Correct Answer: ${correctAnswer}, Question Type: ${questionType}`);
         } catch (error) {
             console.error("Failed to create question, error:", error);
+        }
+    }
+
+    public async getQuestion(questionId: QuestionSchema) : Promise<QuestionSchema | null> {
+        try {
+            const question = await this.db.getQuestion(questionId);
+            return  question;
+        } catch (error) {
+            console.error(`Error retrieving question by ID (${questionId}):`, error);
+            return null;
         }
     }
 

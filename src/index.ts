@@ -3,7 +3,7 @@ import { Hono } from "hono";
 import { logger } from "hono/logger";
 import { cors } from "hono/cors";
 import { startIOServer } from "./io";
-import { DbInterface } from "./db";
+import { DbInterface } from "./database/db";
 
 // Connect to DB
 const db = new DbInterface();
