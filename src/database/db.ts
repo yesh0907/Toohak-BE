@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 import * as dotenv from 'dotenv';
-import { RoomSchema, QuizSchema, QuestionSchema } from './database/schema';
+import { RoomSchema, QuizSchema, QuestionSchema } from './schema';
 import { getModelForClass } from "@typegoose/typegoose";
 
 dotenv.config();
