@@ -73,10 +73,11 @@ class DbHandler {
         }
     }
 
-    public async getQuizById(quizId: string): Promise<QuizSchema | null> {
+    public async getQuiz(quizId: string): Promise<QuizSchema | null> {
         try {
             const quizModel = getModelForClass(QuizSchema);
             const quiz = await quizModel.findById(quizId);
+            console.log(`Returning quiz: ${quizId}`)
             return quiz;
           } catch (error) {
             console.error(`Error retrieving quiz by ID (${quizId}):`, error);
@@ -103,6 +104,18 @@ class DbHandler {
             console.log(`New question created with id: ${question._id}, collection: ${questionModel.collection.collectionName}`);
         } catch (error) {
             console.error(`Question creation error:`, error);
+        }
+    }
+
+    public async getQuestion(questionId: QuestionSchema) : Promise<QuestionSchema | null> {
+        try {
+            const questionModel = getModelForClass(QuestionSchema);
+            const question = questionModel.findById(questionId);
+            console.log(`Returning question: ${questionId}`);
+            return  question;
+        } catch (error) {
+            console.error(`Error retrieving question by ID (${questionId}):`, error);
+            return null;
         }
     }
 
@@ -172,9 +185,9 @@ class DbInterface {
         }
     }
 
-    public async getQuizById(quizId: string): Promise<QuizSchema | null> {
+    public async getQuiz(quizId: string): Promise<QuizSchema | null> {
         try {
-            const quiz = await this.db.getQuizById(quizId);
+            const quiz = await this.db.getQuiz(quizId);
             return quiz;
         } catch (error) {
             console.log(`Failed to retrieve quiz: ${quizId}, error: ${error}`);
@@ -200,6 +213,16 @@ class DbInterface {
             console.log(`Question successfully created with Prompt: ${question}, Possible Answers: ${Array.from(possibleAnswers.keys())}, Correct Answer: ${correctAnswer}, Question Type: ${questionType}`);
         } catch (error) {
             console.error("Failed to create question, error:", error);
+        }
+    }
+
+    public async getQuestion(questionId: QuestionSchema) : Promise<QuestionSchema | null> {
+        try {
+            const question = await this.db.getQuestion(questionId);
+            return  question;
+        } catch (error) {
+            console.error(`Error retrieving question by ID (${questionId}):`, error);
+            return null;
         }
     }
 
