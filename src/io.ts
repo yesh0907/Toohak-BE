@@ -1,6 +1,10 @@
 import { Server as IOServer } from "socket.io";
 import { ServerType } from "@hono/node-server/dist/types";
 import { WS_EVENTS } from "./events";
+import {DbInterface} from "./database/db";
+import {getModelForClass} from "@typegoose/typegoose";
+
+const DEFAULT_QUIZ = "65c0a4c2b07b34c123fc0b29"
 
 export const startIOServer = (httpServer: ServerType) => {
   const io = new IOServer(httpServer, {
@@ -11,6 +15,18 @@ export const startIOServer = (httpServer: ServerType) => {
       credentials: true,
     },
   });
+
+  const db = new DbInterface();
+
+  let questions: Array<string> = [];
+  let recvQuestion, playerCount, questionIndex = 0;
+
+  function sendQuestionToPlayers() {
+    db.getQuestion(questions[questionIndex]).then((question) => {
+      io.emit(WS_EVENTS.NEW_QUESTION, question?.Question, Array.from(question?.PossibleAnswers.values()));
+      questionIndex++;
+    });
+  }
 
   // Handle new web socket connection
   io.on("connection", (socket) => {
@@ -25,7 +41,15 @@ export const startIOServer = (httpServer: ServerType) => {
     });
 
     socket.on(WS_EVENTS.START_QUIZ, () => {
-        console.log(`${socket.id} started the game!`);
+      console.log(`${socket.id} started the game!`)
+      db.getQuiz(DEFAULT_QUIZ).then((quiz) => {
+        if (!quiz) {
+            console.error('No quiz found');
+            return;
+        }
+        questions = quiz.Questions;
+        sendQuestionToPlayers();
+        });
     });
 
     socket.on(WS_EVENTS.WAIT_FOR_QUIZ, () => {
@@ -40,9 +64,13 @@ export const startIOServer = (httpServer: ServerType) => {
       console.log(`Start timer`);
     });
 
-    socket.on(WS_EVENTS.RECV_QUESTION, () => {
+    socket.on(WS_EVENTS.RECV_QUESTION, (roomId) => {
       console.log(`Received question`);
-    });
+      recvQuestion++;
+      if (recvQuestion === playerCount) {
+        io.to(roomId).emit(WS_EVENTS.START_TIMER);
+        recvQuestion = 0;
+      }});
 
     socket.on(WS_EVENTS.NEW_QUESTION, () => {
       console.log(`New question`);
@@ -54,6 +82,7 @@ export const startIOServer = (httpServer: ServerType) => {
 
     socket.on("disconnect", () => {
       console.log(`User disconnected: ${socket.id}`);
+      playerCount--;
     });
   });
 };

@@ -119,7 +119,7 @@ class DbHandler {
         }
     }
 
-    public async getQuestion(questionId: QuestionSchema) : Promise<QuestionSchema | null> {
+    public async getQuestion(questionId: string) : Promise<QuestionSchema | null> {
         try {
             const questionModel = getModelForClass(QuestionSchema);
             const question = questionModel.findById(questionId);
@@ -238,10 +238,10 @@ class DbInterface {
         }
     }
 
-    public async getQuestion(questionId: QuestionSchema) : Promise<QuestionSchema | null> {
+    public async getQuestion(questionId: string) : Promise<QuestionSchema | null> {
         try {
             const question = await this.db.getQuestion(questionId);
-            return  question;
+            return question;
         } catch (error) {
             console.error(`Error retrieving question by ID (${questionId}):`, error);
             return null;
