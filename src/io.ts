@@ -2,7 +2,6 @@ import { Server as IOServer } from "socket.io";
 import { ServerType } from "@hono/node-server/dist/types";
 import { WS_EVENTS } from "./events";
 import {DbInterface} from "./database/db";
-import {getModelForClass} from "@typegoose/typegoose";
 
 const DEFAULT_QUIZ = "65c0a4c2b07b34c123fc0b29"
 
@@ -19,11 +18,11 @@ export const startIOServer = (httpServer: ServerType) => {
   const db = new DbInterface();
 
   let questions: Array<string> = [];
-  let recvQuestion, playerCount, questionIndex = 0;
+  let recvQuestion = 0, playerCount = 0, questionIndex = 0;
 
-  function sendQuestionToPlayers() {
+  function sendQuestionToPlayers(roomId: string) {
     db.getQuestion(questions[questionIndex]).then((question) => {
-      io.emit(WS_EVENTS.NEW_QUESTION, question?.Question, Array.from(question?.PossibleAnswers.values()));
+      io.to(roomId).emit(WS_EVENTS.NEW_QUESTION, question?.Question, Array.from(question?.PossibleAnswers.values()));
       questionIndex++;
     });
   }
@@ -34,13 +33,22 @@ export const startIOServer = (httpServer: ServerType) => {
 
     socket.on(WS_EVENTS.JOIN_ROOM, (room_id: string) => {
       console.log(`Room ID received: ${room_id}`);
+      // join socket.io room
+      socket.join(room_id);
+
+      if (room_id === '1234') {
+        playerCount++;
+        console.log(`Player count: ${playerCount}`);
+        const playerId = `player${playerCount}`;
+        io.to(room_id).emit(WS_EVENTS.NEW_PLAYER, playerId);
+      }
     });
 
     socket.on(WS_EVENTS.NEW_PLAYER, (playerID: string) => {
         console.log(`Player ${playerID} joined the room`);
     });
 
-    socket.on(WS_EVENTS.START_QUIZ, () => {
+    socket.on(WS_EVENTS.START_QUIZ, (roomId: string) => {
       console.log(`${socket.id} started the game!`)
       db.getQuiz(DEFAULT_QUIZ).then((quiz) => {
         if (!quiz) {
@@ -48,7 +56,7 @@ export const startIOServer = (httpServer: ServerType) => {
             return;
         }
         questions = quiz.Questions;
-        sendQuestionToPlayers();
+        sendQuestionToPlayers(roomId);
         });
     });
 
