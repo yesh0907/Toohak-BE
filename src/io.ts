@@ -18,14 +18,21 @@ export const startIOServer = (httpServer: ServerType) => {
 
     socket.on(WS_EVENTS.JOIN_ROOM, (room_id: string) => {
       console.log(`Room ID received: ${room_id}`);
+      // join websocket "room" to listen for any room specific events
+      socket.join(room_id);
     });
 
-    socket.on(WS_EVENTS.NEW_PLAYER, (playerID: string) => {
-        console.log(`Player ${playerID} joined the room`);
-    });
+    socket.on(
+      WS_EVENTS.NEW_PLAYER,
+      ({ roomId, playerId }: { roomId: string; playerId: string }) => {
+        console.log(`Player ${playerId} joined the room`);
+        // let everyone else in the room know there is a new player
+        io.to(roomId).emit(WS_EVENTS.NEW_PLAYER, { roomId, playerId });
+      }
+    );
 
     socket.on(WS_EVENTS.START_QUIZ, () => {
-        console.log(`${socket.id} started the game!`);
+      console.log(`${socket.id} started the game!`);
     });
 
     socket.on(WS_EVENTS.WAIT_FOR_QUIZ, () => {
