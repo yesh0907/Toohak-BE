@@ -20,3 +20,8 @@ export async function getQuestionDataForPlayer(roomId: string, quizId: string, q
     answers: Array.from(question?.PossibleAnswers.values())
   }
 }
+
+
+export async function setRoomToActive(roomId: string) {
+  await db.updateRoomState(roomId, 'ACTIVE');
+}

@@ -1,7 +1,7 @@
 import { Server as IOServer } from "socket.io";
 import { ServerType } from "@hono/node-server/dist/types";
 import { WS_EVENTS } from "./events";
-import { getQuestionDataForPlayer } from "./ioOperations";
+import { getQuestionDataForPlayer, setRoomToActive } from "./ioOperations";
 
 const DEFAULT_QUIZ = "65c0a4c2b07b34c123fc0b29"
 let recvQuestion = 0, playerCount = 0, questionIndex = 0;
@@ -37,7 +37,9 @@ export const startIOServer = (httpServer: ServerType) => {
     );
 
     socket.on(WS_EVENTS.START_QUIZ, async (roomId: string) => {
-      console.log(`${socket.id} started the game!`)
+      console.log(`${socket.id} started the game!`);
+      // set room in DB to active
+      await setRoomToActive(roomId);
       const data = await getQuestionDataForPlayer(roomId, DEFAULT_QUIZ, questionIndex);
       io.to(roomId).emit(WS_EVENTS.NEW_QUESTION, data);
       questionIndex++;
