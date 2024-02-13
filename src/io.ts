@@ -2,8 +2,11 @@ import { Server as IOServer } from "socket.io";
 import { ServerType } from "@hono/node-server/dist/types";
 import { WS_EVENTS } from "./events";
 import {DbInterface} from "./database/db";
+import { sendQuestionToPlayers } from "./ioOperations";
 
 const DEFAULT_QUIZ = "65c0a4c2b07b34c123fc0b29"
+const db = new DbInterface();
+let recvQuestion = 0, playerCount = 0, questionIndex = 0;
 
 export const startIOServer = (httpServer: ServerType) => {
   const io = new IOServer(httpServer, {
@@ -15,25 +18,12 @@ export const startIOServer = (httpServer: ServerType) => {
     },
   });
 
-  const db = new DbInterface();
-
-  let questions: Array<string> = [];
-  let recvQuestion = 0, playerCount = 0, questionIndex = 0;
-
-  function sendQuestionToPlayers(roomId: string) {
-    db.getQuestion(questions[questionIndex]).then((question) => {
-      io.to(roomId).emit(WS_EVENTS.NEW_QUESTION, question?.Question, Array.from(question?.PossibleAnswers.values()));
-      questionIndex++;
-    });
-  }
-
   // Handle new web socket connection
   io.on("connection", (socket) => {
     console.log(`New client connected: ${socket.id}`);
 
     socket.on(WS_EVENTS.JOIN_ROOM, (room_id: string) => {
       console.log(`Room ID received: ${room_id}`);
-      // join socket.io room
       socket.join(room_id);
 
       if (room_id === '1234') {
@@ -48,16 +38,17 @@ export const startIOServer = (httpServer: ServerType) => {
         console.log(`Player ${playerID} joined the room`);
     });
 
-    socket.on(WS_EVENTS.START_QUIZ, (roomId: string) => {
+    socket.on(WS_EVENTS.START_QUIZ, async (roomId: string) => {
       console.log(`${socket.id} started the game!`)
-      db.getQuiz(DEFAULT_QUIZ).then((quiz) => {
-        if (!quiz) {
-            console.error('No quiz found');
-            return;
-        }
-        questions = quiz.Questions;
-        sendQuestionToPlayers(roomId);
-        });
+
+      const quiz = await db.getQuiz(DEFAULT_QUIZ);
+      if (!quiz) {
+        console.error(`quiz not found! with id: ${DEFAULT_QUIZ}`);
+        return;
+      }
+
+      sendQuestionToPlayers(roomId, io, quiz.Questions, questionIndex);
+      questionIndex++;
     });
 
     socket.on(WS_EVENTS.WAIT_FOR_QUIZ, () => {
@@ -78,7 +69,8 @@ export const startIOServer = (httpServer: ServerType) => {
       if (recvQuestion === playerCount) {
         io.to(roomId).emit(WS_EVENTS.START_TIMER);
         recvQuestion = 0;
-      }});
+      }
+    });
 
     socket.on(WS_EVENTS.NEW_QUESTION, () => {
       console.log(`New question`);
