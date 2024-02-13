@@ -10,8 +10,13 @@ export async function getQuestionDataForPlayer(roomId: string, quizId: string, q
   }
 
   const question = await db.getQuestion(quiz.Questions[questionIndex]);
+  if (!question) {
+    console.error(`question not found with id: ${quiz.Questions[questionIndex]}`);
+    return;
+  }
+
   return {
-    question: question?.Question,
+    question: question.Question,
     answers: Array.from(question?.PossibleAnswers.values())
   }
 }
