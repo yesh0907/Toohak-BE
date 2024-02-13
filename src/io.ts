@@ -1,11 +1,9 @@
 import { Server as IOServer } from "socket.io";
 import { ServerType } from "@hono/node-server/dist/types";
 import { WS_EVENTS } from "./events";
-import {DbInterface} from "./database/db";
 import { getQuestionDataForPlayer } from "./ioOperations";
 
 const DEFAULT_QUIZ = "65c0a4c2b07b34c123fc0b29"
-const db = new DbInterface();
 let recvQuestion = 0, playerCount = 0, questionIndex = 0;
 
 export const startIOServer = (httpServer: ServerType) => {
