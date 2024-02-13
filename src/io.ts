@@ -43,7 +43,7 @@ export const startIOServer = (httpServer: ServerType) => {
 
       const quiz = await db.getQuiz(DEFAULT_QUIZ);
       if (!quiz) {
-        console.error(`quiz not found! with id: ${DEFAULT_QUIZ}`);
+        console.error(`quiz not found with id: ${DEFAULT_QUIZ}`);
         return;
       }
 
