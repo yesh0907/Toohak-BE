@@ -27,6 +27,17 @@ app.get("/health", (c) => {
     return c.json({ running: true });
 });
 
+// Create room
+app.post("/create-room", async (c) => {
+    const { hostWsId } = await c.req.json<{hostWsId: string}>();
+    // create room record in db
+    const roomId = await db.createRoom(hostWsId);
+    if (roomId == null) {
+        return c.json({ error: 'could not create room' }, 500);
+    }
+    return c.json({ roomId });
+});
+
 const port = 3000;
 
 // Start an HTTP server to serve the Hono App
