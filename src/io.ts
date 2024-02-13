@@ -2,7 +2,7 @@ import { Server as IOServer } from "socket.io";
 import { ServerType } from "@hono/node-server/dist/types";
 import { WS_EVENTS } from "./events";
 import {DbInterface} from "./database/db";
-import { sendQuestionToPlayers } from "./ioOperations";
+import { getQuestionDataForPlayer } from "./ioOperations";
 
 const DEFAULT_QUIZ = "65c0a4c2b07b34c123fc0b29"
 const db = new DbInterface();
@@ -40,14 +40,8 @@ export const startIOServer = (httpServer: ServerType) => {
 
     socket.on(WS_EVENTS.START_QUIZ, async (roomId: string) => {
       console.log(`${socket.id} started the game!`)
-
-      const quiz = await db.getQuiz(DEFAULT_QUIZ);
-      if (!quiz) {
-        console.error(`quiz not found with id: ${DEFAULT_QUIZ}`);
-        return;
-      }
-
-      sendQuestionToPlayers(roomId, io, quiz.Questions, questionIndex);
+      const data = await getQuestionDataForPlayer(roomId, DEFAULT_QUIZ, questionIndex);
+      io.to(roomId).emit(WS_EVENTS.NEW_QUESTION, data);
       questionIndex++;
     });
 

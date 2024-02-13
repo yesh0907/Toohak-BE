@@ -1,16 +1,17 @@
-import {WS_EVENTS} from "./events";
 import {DbInterface} from "./database/db";
 
 const db = new DbInterface();
 
-export function sendQuestionToPlayers(roomId: string, io, questions, questionIndex) {
+export async function getQuestionDataForPlayer(roomId: string, quizId: string, questionIndex: number) {
+  const quiz = await db.getQuiz(quizId);
+  if (!quiz) {
+    console.error(`quiz not found with id: ${quizId}`);
+    return;
+  }
 
-  db.getQuestion(questions[questionIndex]).then((question) => {
-    const data = {
-      question: question?.Question,
-      answers: Array.from(question?.PossibleAnswers.values())
-    }
-
-    io.to(roomId).emit(WS_EVENTS.NEW_QUESTION, data);
-  });
+  const question = await db.getQuestion(quiz.Questions[questionIndex]);
+  return {
+    question: question?.Question,
+    answers: Array.from(question?.PossibleAnswers.values())
+  }
 }
