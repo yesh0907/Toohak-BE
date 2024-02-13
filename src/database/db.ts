@@ -158,7 +158,7 @@ class DbInterface {
     }
 
     public async createRoom(hostWsId: string): Promise<string | null> {
-        const playerIds: string[] = [];
+        const playerIds = Array<string>();
         const roomState = 'INACTIVE';
         const roomRecord: RoomSchema = {
             HostWsId: hostWsId,
