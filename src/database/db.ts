@@ -39,13 +39,15 @@ class DbHandler {
         await mongoose.disconnect();
     }
 
-    public async createRoom(roomData: RoomSchema): Promise<void> {
+    public async createRoom(roomData: RoomSchema): Promise<string | null> {
         try {
             const roomModel = getModelForClass(RoomSchema);
             const room = await roomModel.create(roomData);
             console.log(`New room created with id: ${room._id}, collection: ${roomModel.collection.collectionName}`);
+            return room._id.toString();
         } catch (error) {
             console.error(`Room creation error:`, error);
+            return null;
         }
     }
 
@@ -155,7 +157,9 @@ class DbInterface {
         this.db = DbHandler.getInstance();
     }
 
-    public async createRoom(hostWsId: string, playerIds: Array<string>, roomState: string): Promise<void> {
+    public async createRoom(hostWsId: string): Promise<string | null> {
+        const playerIds: string[] = [];
+        const roomState = 'INACTIVE';
         const roomRecord: RoomSchema = {
             HostWsId: hostWsId,
             PlayerIds: playerIds,
@@ -163,10 +167,12 @@ class DbInterface {
         };
 
         try {
-            await this.db.createRoom(roomRecord);
+            const id = await this.db.createRoom(roomRecord);
             console.log(`Room successfully created with HostWsId: ${hostWsId}, Player Ids: ${playerIds}, Room State: ${roomState}`);
+            return id;
         } catch (error) {
             console.error("Failed to create room, error:", error);
+            return null;
         }
     }
 
