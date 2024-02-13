@@ -1,7 +1,7 @@
 import { Server as IOServer } from "socket.io";
 import { ServerType } from "@hono/node-server/dist/types";
 import { WS_EVENTS } from "./events";
-import { getQuestionDataForPlayer, setRoomToActive } from "./ioOperations";
+import { addPlayerToRoom, getQuestionDataForPlayer, setRoomToActive } from "./ioOperations";
 
 const DEFAULT_QUIZ = "65c0a4c2b07b34c123fc0b29"
 let recvQuestion = 0, playerCount = 0, questionIndex = 0;
@@ -29,8 +29,10 @@ export const startIOServer = (httpServer: ServerType) => {
 
     socket.on(
       WS_EVENTS.NEW_PLAYER,
-      ({ roomId, playerId }: { roomId: string; playerId: string }) => {
+      async ({ roomId, playerId }: { roomId: string; playerId: string }) => {
         console.log(`Player ${playerId} joined the room`);
+        // add player to room in DB
+        await addPlayerToRoom(roomId, playerId);
         // let everyone else in the room know there is a new player
         io.to(roomId).emit(WS_EVENTS.NEW_PLAYER, { roomId, playerId });
       }

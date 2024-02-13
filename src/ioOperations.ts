@@ -21,7 +21,10 @@ export async function getQuestionDataForPlayer(roomId: string, quizId: string, q
   }
 }
 
-
 export async function setRoomToActive(roomId: string) {
   await db.updateRoomState(roomId, 'ACTIVE');
+}
+
+export async function addPlayerToRoom(roomId: string, playerId: string) {
+  await db.appendPlayerIdToRoom(roomId, playerId);
 }
