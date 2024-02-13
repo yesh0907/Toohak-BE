@@ -1,6 +1,10 @@
 import { Server as IOServer } from "socket.io";
 import { ServerType } from "@hono/node-server/dist/types";
 import { WS_EVENTS } from "./events";
+import { getQuestionDataForPlayer } from "./ioOperations";
+
+const DEFAULT_QUIZ = "65c0a4c2b07b34c123fc0b29"
+let recvQuestion = 0, playerCount = 0, questionIndex = 0;
 
 export const startIOServer = (httpServer: ServerType) => {
   const io = new IOServer(httpServer, {
@@ -18,6 +22,7 @@ export const startIOServer = (httpServer: ServerType) => {
 
     socket.on(WS_EVENTS.JOIN_ROOM, (room_id: string) => {
       console.log(`Room ID received: ${room_id}`);
+
       // join websocket "room" to listen for any room specific events
       socket.join(room_id);
     });
@@ -31,8 +36,11 @@ export const startIOServer = (httpServer: ServerType) => {
       }
     );
 
-    socket.on(WS_EVENTS.START_QUIZ, () => {
-      console.log(`${socket.id} started the game!`);
+    socket.on(WS_EVENTS.START_QUIZ, async (roomId: string) => {
+      console.log(`${socket.id} started the game!`)
+      const data = await getQuestionDataForPlayer(roomId, DEFAULT_QUIZ, questionIndex);
+      io.to(roomId).emit(WS_EVENTS.NEW_QUESTION, data);
+      questionIndex++;
     });
 
     socket.on(WS_EVENTS.WAIT_FOR_QUIZ, () => {
@@ -47,8 +55,13 @@ export const startIOServer = (httpServer: ServerType) => {
       console.log(`Start timer`);
     });
 
-    socket.on(WS_EVENTS.RECV_QUESTION, () => {
+    socket.on(WS_EVENTS.RECV_QUESTION, (roomId) => {
       console.log(`Received question`);
+      recvQuestion++;
+      if (recvQuestion === playerCount) {
+        io.to(roomId).emit(WS_EVENTS.START_TIMER);
+        recvQuestion = 0;
+      }
     });
 
     socket.on(WS_EVENTS.NEW_QUESTION, () => {
@@ -61,6 +74,7 @@ export const startIOServer = (httpServer: ServerType) => {
 
     socket.on("disconnect", () => {
       console.log(`User disconnected: ${socket.id}`);
+      playerCount--;
     });
   });
 };
