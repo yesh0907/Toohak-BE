@@ -196,6 +196,20 @@ class DbInterface {
         await this.db.updateRoom(roomId, updateObject);
     }
 
+    public async appendPlayerIdToRoom(roomId: string, playerId: string) {
+        try {
+            const room = await this.getRoom(roomId);
+            if (room == null) {
+                throw new Error("Room does not exist");
+            }
+            const playerIds = room.PlayerIds;
+            // append playerId to exisitng array of playerIds
+            await this.db.updateRoom(roomId, { PlayerIds: [...playerIds, playerId] });
+        } catch (e) {
+            console.error(`appendPlayerIdToRoom error: ${e}`);
+        }
+    }
+
     public async updateRoomPlayerIds(roomId: string, playerIds: Array<string>) {
         const updateObject = { PlayerIds: playerIds };
         await this.db.updateRoom(roomId, updateObject);
