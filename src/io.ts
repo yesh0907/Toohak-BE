@@ -32,19 +32,23 @@ export const startIOServer = (httpServer: ServerType) => {
       async ({ roomId, playerId }: { roomId: string; playerId: string }) => {
         console.log(`Player ${playerId} joined the room`);
         // add player to room in DB
-        await addPlayerToRoom(roomId, playerId);
+        playerCount = await addPlayerToRoom(roomId, playerId);
         // let everyone else in the room know there is a new player
         io.to(roomId).emit(WS_EVENTS.NEW_PLAYER, { roomId, playerId });
       }
     );
 
     socket.on(WS_EVENTS.START_QUIZ, async (roomId: string) => {
+      questionIndex = 0;
       console.log(`${socket.id} started the game!`);
       // set room in DB to active
       await setRoomToActive(roomId);
       const data = await getQuestionDataForPlayer(roomId, DEFAULT_QUIZ, questionIndex);
-      io.to(roomId).emit(WS_EVENTS.NEW_QUESTION, data);
-      questionIndex++;
+      // only emit when there is data
+      if (data) {
+        io.to(roomId).emit(WS_EVENTS.NEW_QUESTION, data);
+        questionIndex++;
+      }
     });
 
     socket.on(WS_EVENTS.WAIT_FOR_QUIZ, () => {
@@ -59,12 +63,19 @@ export const startIOServer = (httpServer: ServerType) => {
       console.log(`Start timer`);
     });
 
-    socket.on(WS_EVENTS.RECV_QUESTION, (roomId) => {
+    socket.on(WS_EVENTS.RECV_QUESTION, async (roomId) => {
       console.log(`Received question`);
       recvQuestion++;
       if (recvQuestion === playerCount) {
         io.to(roomId).emit(WS_EVENTS.START_TIMER);
         recvQuestion = 0;
+        // send show answer event after 31 seconds
+        const data = {
+          correctAnswer: 'France'
+        }
+        setTimeout(() => {
+          io.to(roomId).emit(WS_EVENTS.SHOW_ANSWER, data);
+        }, 31000);
       }
     });
 

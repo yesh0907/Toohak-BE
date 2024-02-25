@@ -26,5 +26,5 @@ export async function setRoomToActive(roomId: string) {
 }
 
 export async function addPlayerToRoom(roomId: string, playerId: string) {
-  await db.appendPlayerIdToRoom(roomId, playerId);
+  return await db.appendPlayerIdToRoom(roomId, playerId);
 }
