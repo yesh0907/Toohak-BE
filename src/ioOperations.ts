@@ -26,16 +26,6 @@ export function convertQuestionSchemaToData(question: QuestionSchema) {
   }
 }
 
-export async function getQuiz(quizId: string, questionIndex: number) {
-  const quiz = await db.getQuiz(quizId);
-  if (!quiz) {
-    console.error(`quiz not found with id: ${quizId}`);
-    return;
-  }
-
-  return await db.getQuestion(quiz.Questions[questionIndex]);
-}
-
 export async function setRoomToActive(roomId: string) {
   await db.updateRoomState(roomId, 'ACTIVE');
 }
