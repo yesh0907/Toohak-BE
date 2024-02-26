@@ -80,7 +80,7 @@ export const startIOServer = (httpServer: ServerType) => {
       questionIndex++;
     });
 
-    socket.on(WS_EVENTS.WAIT_FOR_QUIZ, async (roomId: string) => {
+    socket.on(WS_EVENTS.WAIT_FOR_QUIZ, async (roomId: string, playerId: string) => {
       recvWaitForQuiz++;
       if (recvWaitForQuiz === playerCount) {
         // get next question
@@ -98,8 +98,14 @@ export const startIOServer = (httpServer: ServerType) => {
         // no more questions, so it is the end of the quiz
         if (schema == null) {
           console.log('quiz done');
-          // TODO: include leaderboard results with event
-          io.to(roomId).emit(WS_EVENTS.QUIZ_COMPLETED);
+          // sort leaderboard by scores and get top 3
+          const leaderboard = Array.from(playerScores.entries()).sort((a, b) => b[1] - a[1]).slice(0, 3);
+          const playerScore = playerScores.get(playerId);
+          const data = {
+            'leaderboard': leaderboard,
+            'playerScore': playerScore,
+          }
+          io.to(roomId).emit(WS_EVENTS.QUIZ_COMPLETED, data);
         } else {
           console.log('next question');
           question = schema;
