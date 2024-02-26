@@ -15,7 +15,8 @@ const TIMEOUT = 31000;
 let recvQuestion = 0,
   playerCount = 0,
   questionIndex = 0,
-  recvAnswer = 0;
+  recvAnswer = 0,
+  recvWaitForQuiz = 0;
 let question: QuestionSchema | undefined;
 let playerScores = new Map<string, number>();
 let playerAnswerTimeout: ReturnType<typeof setInterval>;
@@ -61,12 +62,15 @@ export const startIOServer = (httpServer: ServerType) => {
       await setRoomToActive(roomId);
       questionIndex = 0;
       // storing question so that we can send correct answer without repetitive DB calls
-      question = await getQuestionSchema(DEFAULT_QUIZ, questionIndex);
-      // check if question is undefined
-      if (question == null) {
+      const { error, question: schema } = await getQuestionSchema(
+        DEFAULT_QUIZ,
+        questionIndex
+      );
+      if (error || schema == null) {
         console.error("start quiz: unable to get question");
         return;
       }
+      question = schema;
       const data = convertQuestionSchemaToData(question);
       io.to(roomId).emit(WS_EVENTS.NEW_QUESTION, data);
 
@@ -76,8 +80,38 @@ export const startIOServer = (httpServer: ServerType) => {
       questionIndex++;
     });
 
-    socket.on(WS_EVENTS.WAIT_FOR_QUIZ, () => {
-      console.log(`Waiting for game to start...`);
+    socket.on(WS_EVENTS.WAIT_FOR_QUIZ, async (roomId: string) => {
+      recvWaitForQuiz++;
+      if (recvWaitForQuiz === playerCount) {
+        // get next question
+        const { error, question: schema } = await getQuestionSchema(
+          DEFAULT_QUIZ,
+          questionIndex
+        );
+        // check if question is undefined
+        if (error) {
+          console.error(
+            `waiting for quiz: unable to get question for room ${roomId}`
+          );
+          return;
+        }
+        // no more questions, so it is the end of the quiz
+        if (schema == null) {
+          console.log('quiz done');
+          // TODO: include leaderboard results with event
+          io.to(roomId).emit(WS_EVENTS.QUIZ_COMPLETED);
+        } else {
+          console.log('next question');
+          question = schema;
+          const data = convertQuestionSchemaToData(question);
+          io.to(roomId).emit(WS_EVENTS.NEW_QUESTION, data);
+
+          playerAnswerTimeout = setTimeout(() => {
+            io.to(roomId).emit(WS_EVENTS.SHOW_ANSWER, question?.CorrectAnswer);
+          }, TIMEOUT);
+          questionIndex++;
+        }
+      }
     });
 
     socket.on(WS_EVENTS.QUIZ_COMPLETED, () => {
@@ -95,6 +129,7 @@ export const startIOServer = (httpServer: ServerType) => {
         io.to(roomId).emit(WS_EVENTS.START_TIMER);
         recvQuestion = 0;
         recvAnswer = 0;
+        recvWaitForQuiz = 0;
       }
     });
 
