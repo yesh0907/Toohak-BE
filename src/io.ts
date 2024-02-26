@@ -88,7 +88,7 @@ export const startIOServer = (httpServer: ServerType) => {
       console.log(`Start timer`);
     });
 
-    socket.on(WS_EVENTS.RECV_QUESTION, async (roomId) => {
+    socket.on(WS_EVENTS.RECV_QUESTION, (roomId) => {
       console.log(`Received question`);
       recvQuestion++;
       if (recvQuestion === playerCount) {
