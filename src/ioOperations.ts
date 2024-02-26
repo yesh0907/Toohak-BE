@@ -1,8 +1,9 @@
 import {DbInterface} from "./database/db";
+import {QuestionSchema} from "./database/schema";
 
 const db = new DbInterface();
 
-export async function getQuestionDataForPlayer(roomId: string, quizId: string, questionIndex: number) {
+export async function getQuestionSchema(quizId: string, questionIndex: number) {
   const quiz = await db.getQuiz(quizId);
   if (!quiz) {
     console.error(`quiz not found with id: ${quizId}`);
@@ -15,6 +16,10 @@ export async function getQuestionDataForPlayer(roomId: string, quizId: string, q
     return;
   }
 
+  return question;
+}
+
+export function convertQuestionSchemaToData(question: QuestionSchema) {
   return {
     question: question.Question,
     answers: Array.from(question?.PossibleAnswers.values())

@@ -8,4 +8,5 @@ export const WS_EVENTS = {
     RECV_QUESTION: "recvQuestion",
     NEW_QUESTION: "newQuestion",
     SHOW_ANSWER: "showAnswer",
+    ANSWER_QUESTION: "answerQuestion"
 }
