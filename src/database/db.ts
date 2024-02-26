@@ -205,12 +205,9 @@ class DbInterface {
             const playerIds = room.PlayerIds;
             // append playerId to exisitng array of playerIds
             await this.db.updateRoom(roomId, { PlayerIds: [...playerIds, playerId] });
-            // return updated player count
-            return playerIds.length+1;
         } catch (e) {
             console.error(`appendPlayerIdToRoom error: ${e}`);
         }
-        return 0;
     }
 
     public async updateRoomPlayerIds(roomId: string, playerIds: Array<string>) {

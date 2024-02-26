@@ -1,13 +1,21 @@
 import { Server as IOServer } from "socket.io";
 import { ServerType } from "@hono/node-server/dist/types";
 import { WS_EVENTS } from "./events";
-import {addPlayerToRoom, convertQuestionSchemaToData, getQuestionSchema, setRoomToActive} from "./ioOperations";
-import {QuestionSchema} from "./database/schema";
+import {
+  addPlayerToRoom,
+  convertQuestionSchemaToData,
+  getQuestionSchema,
+  setRoomToActive,
+} from "./ioOperations";
+import { QuestionSchema } from "./database/schema";
 
-const DEFAULT_QUIZ = "65c0a4c2b07b34c123fc0b29"
-const TIMEOUT = 31000
+const DEFAULT_QUIZ = "65c0a4c2b07b34c123fc0b29";
+const TIMEOUT = 31000;
 
-let recvQuestion = 0, playerCount = 0, questionIndex = 0, recvAnswer = 0;
+let recvQuestion = 0,
+  playerCount = 0,
+  questionIndex = 0,
+  recvAnswer = 0;
 let question: QuestionSchema | undefined;
 let playerScores = new Map<string, number>();
 let playerAnswerTimeout: ReturnType<typeof setInterval>;
@@ -56,7 +64,7 @@ export const startIOServer = (httpServer: ServerType) => {
       question = await getQuestionSchema(DEFAULT_QUIZ, questionIndex);
       // check if question is undefined
       if (question == null) {
-        console.error('start quiz: unable to get question');
+        console.error("start quiz: unable to get question");
         return;
       }
       const data = convertQuestionSchemaToData(question);
@@ -86,13 +94,7 @@ export const startIOServer = (httpServer: ServerType) => {
       if (recvQuestion === playerCount) {
         io.to(roomId).emit(WS_EVENTS.START_TIMER);
         recvQuestion = 0;
-        // send show answer event after 31 seconds
-        const data = {
-          correctAnswer: 'France'
-        }
-        setTimeout(() => {
-          io.to(roomId).emit(WS_EVENTS.SHOW_ANSWER, data);
-        }, 31000);
+        recvAnswer = 0;
       }
     });
 
@@ -104,18 +106,21 @@ export const startIOServer = (httpServer: ServerType) => {
       console.log(`Show answer`);
     });
 
-    socket.on(WS_EVENTS.ANSWER_QUESTION, (roomId: string, playerId: string, answer: string) => {
-      recvAnswer++;
-      if (answer === question?.CorrectAnswer) {
-        const currentScore = playerScores.get(playerId) ?? 0;
-        playerScores.set(playerId, currentScore + 1);
-      }
+    socket.on(
+      WS_EVENTS.ANSWER_QUESTION,
+      (roomId: string, playerId: string, answer: string) => {
+        recvAnswer++;
+        if (answer === question?.CorrectAnswer) {
+          const currentScore = playerScores.get(playerId) ?? 0;
+          playerScores.set(playerId, currentScore + 1);
+        }
 
-      if (recvAnswer === playerCount) {
-        clearTimeout(playerAnswerTimeout);
-        io.to(roomId).emit(WS_EVENTS.SHOW_ANSWER, question?.CorrectAnswer);
+        if (recvAnswer === playerCount) {
+          clearTimeout(playerAnswerTimeout);
+          io.to(roomId).emit(WS_EVENTS.SHOW_ANSWER, question?.CorrectAnswer);
+        }
       }
-    })
+    );
 
     socket.on("disconnect", () => {
       console.log(`User disconnected: ${socket.id}`);
