@@ -10,7 +10,7 @@ const TIMEOUT = 31000
 let recvQuestion = 0, playerCount = 0, questionIndex = 0, recvAnswer = 0;
 let question: QuestionSchema;
 let playerScores = new Map<string, number>();
-let playerAnswerTimeout;
+let playerAnswerTimeout: number;
 
 export const startIOServer = (httpServer: ServerType) => {
   const io = new IOServer(httpServer, {
@@ -50,6 +50,7 @@ export const startIOServer = (httpServer: ServerType) => {
       console.log(`${socket.id} started the game!`);
       // set room in DB to active
       await setRoomToActive(roomId);
+      questionIndex = 0;
       // storing question so that we can send correct answer without repetitive DB calls
       question = await getQuestionSchema(DEFAULT_QUIZ, questionIndex);
       const data = convertQuestionSchemaToData(question);
@@ -57,7 +58,7 @@ export const startIOServer = (httpServer: ServerType) => {
 
       playerAnswerTimeout = setTimeout(() => {
         io.to(roomId).emit(WS_EVENTS.SHOW_ANSWER, question.CorrectAnswer);
-        }, TIMEOUT);
+      }, TIMEOUT);
       questionIndex++;
     });
 
@@ -101,7 +102,7 @@ export const startIOServer = (httpServer: ServerType) => {
         clearTimeout(playerAnswerTimeout);
         io.to(roomId).emit(WS_EVENTS.SHOW_ANSWER, question.CorrectAnswer);
       }
-      })
+    })
 
     socket.on("disconnect", () => {
       console.log(`User disconnected: ${socket.id}`);
