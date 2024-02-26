@@ -7,16 +7,33 @@ export async function getQuestionSchema(quizId: string, questionIndex: number) {
   const quiz = await db.getQuiz(quizId);
   if (!quiz) {
     console.error(`quiz not found with id: ${quizId}`);
-    return;
+    return {
+      error: true,
+      question: null
+    };
+  }
+
+  // no more questions
+  if (quiz.Questions.length === questionIndex) {
+    return {
+      error: false,
+      question: null
+    };
   }
 
   const question = await db.getQuestion(quiz.Questions[questionIndex]);
   if (!question) {
     console.error(`question not found with id: ${quiz.Questions[questionIndex]}`);
-    return;
+    return {
+      error: true,
+      question: null
+    };
   }
 
-  return question;
+  return {
+    error: false,
+    question
+  };
 }
 
 export function convertQuestionSchemaToData(question: QuestionSchema) {
