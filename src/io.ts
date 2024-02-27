@@ -101,7 +101,7 @@ export const startIOServer = (httpServer: ServerType) => {
           console.log('quiz done');
           // sort leaderboard by scores and get top 3
           const leaderboard = Array.from(playerScores.entries()).sort((a, b) => b[1] - a[1]).slice(0, 3);
-          const playerScore = playerScores.get(playerId);
+          const playerScore = playerScores.get(playerId) ?? 0;
           const data = {
             leaderboard, 
             playerScore,
