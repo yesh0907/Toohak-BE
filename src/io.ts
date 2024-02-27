@@ -6,6 +6,7 @@ import {
   convertQuestionSchemaToData,
   getQuestionSchema,
   setRoomToActive,
+  setRoomToInactive,
 } from "./ioOperations";
 import { QuestionSchema } from "./database/schema";
 
@@ -102,9 +103,10 @@ export const startIOServer = (httpServer: ServerType) => {
           const leaderboard = Array.from(playerScores.entries()).sort((a, b) => b[1] - a[1]).slice(0, 3);
           const playerScore = playerScores.get(playerId);
           const data = {
-            'leaderboard': leaderboard,
-            'playerScore': playerScore,
+            leaderboard, 
+            playerScore,
           }
+          await setRoomToInactive(roomId);
           io.to(roomId).emit(WS_EVENTS.QUIZ_COMPLETED, data);
         } else {
           console.log('next question');
