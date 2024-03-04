@@ -53,12 +53,12 @@ app.post("/insert-question", async (c) => {
 
         const quiz = await db.getQuiz(quizId);
         if (quiz == null) {
-            return c.json({ error: "Quiz does not exist"}, 500);
+            return c.json({ error: "Quiz does not exist"}, 404);
         }
 
         const updatedQuestions = [...quiz.Questions, newQuestionId];
         await db.updateQuizQuestionIds(quizId, updatedQuestions);
-        return c.json({ message: 'Question added to quiz' });
+        return c.json({ message: 'Question added to quiz' }, 200);
     } catch (error) {
         console.error('Error inserting question into quiz:', error);
         return c.json({ error: 'Failed to insert question into quiz' }, 500);
