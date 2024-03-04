@@ -38,6 +38,33 @@ app.post("/create-room", async (c) => {
     return c.json({ roomId });
 });
 
+// Add question to quiz
+app.post("/insert-question", async (c) => {
+    const { quizId, Question, PossibleAnswers, CorrectAnswer, QuestionType } = 
+    await c.req.json<{quizId: string, Question: string, PossibleAnswers: Map<string, string>, CorrectAnswer: string, QuestionType?: string}>();
+    const updatedQuestionType = QuestionType ?? "MCQ";
+
+    try {
+        const newQuestionId = await db.createQuestion(Question, PossibleAnswers, CorrectAnswer, updatedQuestionType);
+
+        if (newQuestionId == null) {
+            return c.json({ error: "Failed to create question" }, 500);
+        }
+
+        const quiz = await db.getQuiz(quizId);
+        if (quiz == null) {
+            return c.json({ error: "Quiz does not exist"}, 500);
+        }
+
+        const updatedQuestions = [...quiz.Questions, newQuestionId];
+        await db.updateQuizQuestionIds(quizId, updatedQuestions);
+        return c.json({ message: 'Question added to quiz' });
+    } catch (error) {
+        console.error('Error inserting question into quiz:', error);
+        return c.json({ error: 'Failed to insert question into quiz' }, 500);
+    }
+});
+
 const port = 3000;
 
 // Start an HTTP server to serve the Hono App
