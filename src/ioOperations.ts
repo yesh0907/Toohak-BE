@@ -54,3 +54,30 @@ export async function setRoomToInactive(roomId: string) {
 export async function addPlayerToRoom(roomId: string, playerId: string) {
   await db.appendPlayerIdToRoom(roomId, playerId);
 }
+
+export interface RoomVariables {
+    recvQuestion: number;
+    playerCount: number;
+    questionIndex: number;
+    recvAnswer: number;
+    recvWaitForQuiz: number;
+    question: QuestionSchema | undefined;
+    playerScores: Map<string, number>;
+    playerAnswerTimeout: ReturnType<typeof setInterval> | undefined;
+    quizId: string;
+}
+export function initializeRoomVariables(roomId: string, roomVariables: Map<string, RoomVariables>) {
+    console.log('creating ROOM VARS')
+    roomVariables[roomId] = {
+        recvQuestion: 0,
+        playerCount: 0,
+        questionIndex: 0,
+        recvAnswer: 0,
+        recvWaitForQuiz: 0,
+        question: undefined,
+        playerScores: new Map<string, number>(),
+        playerAnswerTimeout: undefined,
+        quizId: ""
+    };
+}
+
