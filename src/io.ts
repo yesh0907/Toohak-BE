@@ -166,8 +166,8 @@ export const startIOServer = (httpServer: ServerType) => {
         if (roomVariables.socketIdsConnected.has(socket.id)) {
             perRoomVariables[roomId].playerCount--;
             break;
-            }
         }
+      }
     });
   });
 };
