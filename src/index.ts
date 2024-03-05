@@ -47,7 +47,6 @@ app.post("/create-question", async (c) => {
             correctAnswer: string,
             questionType?: string
         }>();
-    console.log(possibleAnswers);
     const updatedQuestionType = questionType ?? "MCQ";
 
     const newQuestionId = await db.createQuestion(question, possibleAnswers, correctAnswer, updatedQuestionType);
