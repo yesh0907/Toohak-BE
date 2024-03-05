@@ -38,6 +38,18 @@ app.post("/create-room", async (c) => {
     return c.json({ roomId });
 });
 
+// Create quiz
+app.post("/create-quiz", async (c) => {
+    const { quizQuestions } = await c.req.json<{quizQuestions: Array<string>}>();
+    // create quiz in db
+    const quizId = await db.createQuiz(quizQuestions)
+    if (quizId == null) {
+        console.log("quizId: ", quizId);
+        return c.json({ error: 'could not create quiz' }, 500);
+    }
+    return c.json({ quizId });
+})
+
 const port = 3000;
 
 // Start an HTTP server to serve the Hono App
