@@ -10,7 +10,6 @@ import {
 } from "./ioOperations";
 import { QuestionSchema } from "./database/schema";
 
-const DEFAULT_QUIZ = "65c0a4c2b07b34c123fc0b29";
 const TIMEOUT = 31000;
 
 let recvQuestion = 0,
@@ -21,6 +20,7 @@ let recvQuestion = 0,
 let question: QuestionSchema | undefined;
 let playerScores = new Map<string, number>();
 let playerAnswerTimeout: ReturnType<typeof setInterval>;
+let quizId = "";
 
 export const startIOServer = (httpServer: ServerType) => {
   const io = new IOServer(httpServer, {
@@ -56,15 +56,16 @@ export const startIOServer = (httpServer: ServerType) => {
       }
     );
 
-    socket.on(WS_EVENTS.START_QUIZ, async (roomId: string) => {
+    socket.on(WS_EVENTS.START_QUIZ, async (roomId: string, selectedQuizId: string) => {
       questionIndex = 0;
       console.log(`${socket.id} started the game!`);
       // set room in DB to active
       await setRoomToActive(roomId);
       questionIndex = 0;
+      quizId = selectedQuizId;
       // storing question so that we can send correct answer without repetitive DB calls
       const { error, question: schema } = await getQuestionSchema(
-        DEFAULT_QUIZ,
+        quizId,
         questionIndex
       );
       if (error || schema == null) {
@@ -86,7 +87,7 @@ export const startIOServer = (httpServer: ServerType) => {
       if (recvWaitForQuiz === playerCount) {
         // get next question
         const { error, question: schema } = await getQuestionSchema(
-          DEFAULT_QUIZ,
+          quizId,
           questionIndex
         );
         // check if question is undefined
