@@ -77,13 +77,15 @@ class DbHandler {
         }
     }
 
-    public async createQuiz(quizData: QuizSchema): Promise<void> {
+    public async createQuiz(quizData: QuizSchema): Promise<string | null> {
         try {
             const quizModel = getModelForClass(QuizSchema);
             const quiz = await quizModel.create(quizData);
             console.log(`New quiz created with id: ${quiz._id}, collection: ${quizModel.collection.collectionName}`);
+            return quiz._id.toString();
         } catch (error) {
             console.error(`Quiz creation error:`, error);
+            return null;
         }
     }
 
@@ -217,15 +219,17 @@ class DbInterface {
         await this.db.updateRoom(roomId, updateObject);
     }
 
-    public async createQuiz(questionIds: Array<string>): Promise<void> {
+    public async createQuiz(questionIds: Array<string>): Promise<string | null> {
         const quizList: QuizSchema = {
             Questions: questionIds,
         };
         try {
-            await this.db.createQuiz(quizList);
+            const id = await this.db.createQuiz(quizList);
             console.log(`Quiz successfully created with Question Id List: ${questionIds}`);
+            return id;
         } catch (error) {
             console.error("Failed to create quiz, error:", error);
+            return null;
         }
     }
 
