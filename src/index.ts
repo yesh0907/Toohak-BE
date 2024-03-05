@@ -40,14 +40,22 @@ app.post("/create-room", async (c) => {
 
 // Create quiz
 app.post("/create-quiz", async (c) => {
-    const { quizQuestions } = await c.req.json<{quizQuestions: Array<string>}>();
+    const { quizName, quizQuestions } = await c.req.json<{quizName: string, quizQuestions: Array<string>}>();
     // create quiz in db
-    const quizId = await db.createQuiz(quizQuestions)
+    const quizId = await db.createQuiz(quizName, quizQuestions);
     if (quizId == null) {
-        console.log("quizId: ", quizId);
         return c.json({ error: 'could not create quiz' }, 500);
     }
     return c.json({ quizId });
+})
+
+// Get all quizzes in the database
+app.get("/get-all-quizzes", async (c) => {
+    const quizzes = await db.getAllQuizzes();
+    if (quizzes == null) {
+        return c.json({ error: 'could not get quizzes' }, 500);
+    }
+    return c.json({ quizzes });
 })
 
 const port = 3000;

@@ -14,6 +14,9 @@ export class RoomSchema {
 
 @modelOptions({ schemaOptions: { collection: 'quiz'}})
 export class QuizSchema {
+    @prop({required: true, type: () => String})
+    public QuizName: string
+
     @prop({required: true, type: () => Array<String>}, PropType.ARRAY)
     public Questions: Array<string>;
 }
