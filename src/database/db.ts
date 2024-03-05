@@ -93,12 +93,25 @@ class DbHandler {
         try {
             const quizModel = getModelForClass(QuizSchema);
             const quiz = await quizModel.findById(quizId);
-            console.log(`Returning quiz: ${quizId}`)
+            console.log(`Returning quiz: ${quizId}`);
             return quiz;
           } catch (error) {
             console.error(`Error retrieving quiz by ID (${quizId}):`, error);
             return null;
           }
+    }
+
+    public async getAllQuizzes(): Promise<Array<QuizSchema> | null> {
+        try {
+            const quizModel = getModelForClass(QuizSchema);
+            // lean() returns plain JS objects, making query faster + less memory intensive
+            const quizzes = await quizModel.find({}).lean();
+            console.log(`Returning all quizzes: ${quizzes}`);
+            return quizzes;
+        } catch (error) {
+            console.error(`Error retrieving all quizzes: ${error}`);
+            return null;
+        }
     }
 
     public async updateQuizQuestionIds(quizId: string, updateData: {
@@ -185,7 +198,7 @@ class DbInterface {
             const room = await this.db.getRoom(roomId);
             return room;
         } catch (error) {
-            console.log(`Failed to retrieve room: ${roomId}, error: ${error}`);
+            console.error(`Failed to retrieve room: ${roomId}, error: ${error}`);
             return null;
         }
     }
@@ -219,12 +232,13 @@ class DbInterface {
         await this.db.updateRoom(roomId, updateObject);
     }
 
-    public async createQuiz(questionIds: Array<string>): Promise<string | null> {
-        const quizList: QuizSchema = {
+    public async createQuiz(quizName: string, questionIds: Array<string>): Promise<string | null> {
+        const quizData: QuizSchema = {
+            QuizName: quizName,
             Questions: questionIds,
         };
         try {
-            const id = await this.db.createQuiz(quizList);
+            const id = await this.db.createQuiz(quizData);
             console.log(`Quiz successfully created with Question Id List: ${questionIds}`);
             return id;
         } catch (error) {
@@ -238,7 +252,17 @@ class DbInterface {
             const quiz = await this.db.getQuiz(quizId);
             return quiz;
         } catch (error) {
-            console.log(`Failed to retrieve quiz: ${quizId}, error: ${error}`);
+            console.error(`Failed to retrieve quiz: ${quizId}, error: ${error}`);
+            return null;
+        }
+    }
+
+    public async getAllQuizzes(): Promise<Array<QuizSchema> | null> {
+        try {
+            const quizzes = await this.db.getAllQuizzes();
+            return quizzes;
+        } catch (error) {
+            console.error(`Failed to retrieve all quizzes, error: ${error}`);
             return null;
         }
     }
