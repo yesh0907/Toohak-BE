@@ -67,7 +67,6 @@ export interface RoomVariables {
     quizId: string;
 }
 export function initializeRoomVariables(roomId: string, roomVariables: Map<string, RoomVariables>) {
-    console.log('creating ROOM VARS')
     roomVariables[roomId] = {
         recvQuestion: 0,
         playerCount: 0,
@@ -80,4 +79,3 @@ export function initializeRoomVariables(roomId: string, roomVariables: Map<strin
         quizId: ""
     };
 }
-
