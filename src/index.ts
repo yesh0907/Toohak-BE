@@ -38,6 +38,24 @@ app.post("/create-room", async (c) => {
     return c.json({ roomId });
 });
 
+// Add question, return id
+app.post("/create-question", async (c) => {
+    const { Question, PossibleAnswers, CorrectAnswer, QuestionType } = 
+    await c.req.json<{
+        Question: string, 
+        PossibleAnswers: Map<string, string>, 
+        CorrectAnswer: string,
+        QuestionType?: string
+    }>();
+    const updatedQuestionType = QuestionType ?? "MCQ";
+
+    const newQuestionId = await db.createQuestion(Question, PossibleAnswers, CorrectAnswer, updatedQuestionType);
+    if (newQuestionId == null) {
+        return c.json({ error: "Failed to create question" }, 500);
+    }
+    return c.json({ id: newQuestionId });
+});
+
 // Create quiz
 app.post("/create-quiz", async (c) => {
     const { quizQuestions } = await c.req.json<{quizQuestions: Array<string>}>();

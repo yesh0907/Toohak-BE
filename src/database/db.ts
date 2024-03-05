@@ -113,13 +113,15 @@ class DbHandler {
         }
     }
 
-    public async createQuestion(questionData: QuestionSchema): Promise<void> {
+    public async createQuestion(questionData: QuestionSchema): Promise<string | null> {
         try {
             const questionModel = getModelForClass(QuestionSchema);
             const question = await questionModel.create(questionData);
             console.log(`New question created with id: ${question._id}, collection: ${questionModel.collection.collectionName}`);
+            return question._id.toString();
         } catch (error) {
             console.error(`Question creation error:`, error);
+            return null;
         }
     }
 
@@ -255,10 +257,12 @@ class DbInterface {
         }
 
         try {
-            await this.db.createQuestion(questionMetadata);
-            console.log(`Question successfully created with Prompt: ${question}, Possible Answers: ${Array.from(possibleAnswers.keys())}, Correct Answer: ${correctAnswer}, Question Type: ${questionType}`);
+            const questionId = await this.db.createQuestion(questionMetadata);
+            console.log(`Question successfully created with Prompt: ${question}, Possible Answers: ${JSON.stringify(possibleAnswers)}, Correct Answer: ${correctAnswer}, Question Type: ${questionType}`);
+            return questionId;
         } catch (error) {
             console.error("Failed to create question, error:", error);
+            return null;
         }
     }
 
