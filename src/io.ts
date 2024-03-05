@@ -44,6 +44,7 @@ export const startIOServer = (httpServer: ServerType) => {
         io.to(roomId).emit(WS_EVENTS.NEW_PLAYER, { roomId, playerId });
         perRoomVariables[roomId].playerCount++;
         perRoomVariables[roomId].playerScores.set(playerId, 0);
+        perRoomVariables[roomId].socketIdsConnected.add(socket.id);
       }
     );
 
@@ -160,7 +161,13 @@ export const startIOServer = (httpServer: ServerType) => {
 
     socket.on("disconnect", () => {
       console.log(`User disconnected: ${socket.id}`);
-      // perRoomVariables[roomId].playerCount--;
+      for (const roomId in perRoomVariables) {
+        const roomVariables = perRoomVariables[roomId];
+        if (roomVariables.socketIdsConnected.has(socket.id)) {
+            perRoomVariables[roomId].playerCount--;
+            break;
+            }
+        }
     });
   });
 };

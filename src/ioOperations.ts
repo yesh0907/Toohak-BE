@@ -65,6 +65,7 @@ export interface RoomVariables {
     playerScores: Map<string, number>;
     playerAnswerTimeout: ReturnType<typeof setInterval> | undefined;
     quizId: string;
+    socketIdsConnected: Set<string>;
 }
 export function initializeRoomVariables(roomId: string, roomVariables: Map<string, RoomVariables>) {
     roomVariables[roomId] = {
@@ -76,6 +77,7 @@ export function initializeRoomVariables(roomId: string, roomVariables: Map<strin
         question: undefined,
         playerScores: new Map<string, number>(),
         playerAnswerTimeout: undefined,
-        quizId: ""
+        quizId: "",
+        socketIdsConnected: new Set<string>()
     };
 }
