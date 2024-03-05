@@ -44,14 +44,9 @@ app.post("/create-question", async (c) => {
     await c.req.json<{Question: string, PossibleAnswers: Map<string, string>, CorrectAnswer: string, QuestionType?: string}>();
     const updatedQuestionType = QuestionType ?? "MCQ";
 
-    try {
-        const newQuestionId = await db.createQuestion(Question, PossibleAnswers, CorrectAnswer, updatedQuestionType);
-        if (newQuestionId == null) {
-            return c.json({ error: "Failed to create question" }, 500);
-        }
-    } catch (error) {
-        console.error('Error creating question:', error);
-        return c.json({ error: 'Failed to insert question into database' }, 500);
+    const newQuestionId = await db.createQuestion(Question, PossibleAnswers, CorrectAnswer, updatedQuestionType);
+    if (newQuestionId == null) {
+        return c.json({ error: "Failed to create question" }, 500);
     }
     return c.json({ newQuestionId });
 });

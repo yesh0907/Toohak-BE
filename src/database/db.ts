@@ -249,17 +249,16 @@ class DbInterface {
     }
 
     public async createQuestion(question: string, possibleAnswers: Map<string, string>, correctAnswer: string, questionType: string) {
-        const possibleAnswersMap = new Map(Object.entries(possibleAnswers));
         const questionMetadata: QuestionSchema = {
             Question: question,
-            PossibleAnswers: possibleAnswersMap,
+            PossibleAnswers: possibleAnswers,
             CorrectAnswer: correctAnswer,
             QuestionType: questionType,
         }
 
         try {
             const questionId = await this.db.createQuestion(questionMetadata);
-            console.log(`Question successfully created with Prompt: ${question}, Possible Answers: ${Array.from(possibleAnswersMap.values())}, Correct Answer: ${correctAnswer}, Question Type: ${questionType}`);
+            console.log(`Question successfully created with Prompt: ${question}, Possible Answers: ${JSON.stringify(possibleAnswers)}, Correct Answer: ${correctAnswer}, Question Type: ${questionType}`);
             return questionId;
         } catch (error) {
             console.error("Failed to create question, error:", error);
