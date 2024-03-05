@@ -40,16 +40,17 @@ app.post("/create-room", async (c) => {
 
 // Add question, return id
 app.post("/create-question", async (c) => {
-    const { Question, PossibleAnswers, CorrectAnswer, QuestionType } = 
-    await c.req.json<{
-        Question: string, 
-        PossibleAnswers: Map<string, string>, 
-        CorrectAnswer: string,
-        QuestionType?: string
-    }>();
-    const updatedQuestionType = QuestionType ?? "MCQ";
+    const { question, possibleAnswers, correctAnswer, questionType } = 
+        await c.req.json<{
+            question: string, 
+            possibleAnswers: Map<string, string>, 
+            correctAnswer: string,
+            questionType?: string
+        }>();
+    console.log(possibleAnswers);
+    const updatedQuestionType = questionType ?? "MCQ";
 
-    const newQuestionId = await db.createQuestion(Question, PossibleAnswers, CorrectAnswer, updatedQuestionType);
+    const newQuestionId = await db.createQuestion(question, possibleAnswers, correctAnswer, updatedQuestionType);
     if (newQuestionId == null) {
         return c.json({ error: "Failed to create question" }, 500);
     }
