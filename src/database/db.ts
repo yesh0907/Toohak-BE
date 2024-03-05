@@ -109,7 +109,7 @@ class DbHandler {
             console.log(`Returning all quizzes: ${quizzes}`);
             return quizzes;
         } catch (error) {
-            console.log(`Error retrieving all quizzes: ${error}`);
+            console.error(`Error retrieving all quizzes: ${error}`);
             return null;
         }
     }
@@ -196,7 +196,7 @@ class DbInterface {
             const room = await this.db.getRoom(roomId);
             return room;
         } catch (error) {
-            console.log(`Failed to retrieve room: ${roomId}, error: ${error}`);
+            console.error(`Failed to retrieve room: ${roomId}, error: ${error}`);
             return null;
         }
     }
@@ -250,7 +250,7 @@ class DbInterface {
             const quiz = await this.db.getQuiz(quizId);
             return quiz;
         } catch (error) {
-            console.log(`Failed to retrieve quiz: ${quizId}, error: ${error}`);
+            console.error(`Failed to retrieve quiz: ${quizId}, error: ${error}`);
             return null;
         }
     }
@@ -260,7 +260,7 @@ class DbInterface {
             const quizzes = await this.db.getAllQuizzes();
             return quizzes;
         } catch (error) {
-            console.log(`Failed to retrieve all quizzes, error: ${error}`);
+            console.error(`Failed to retrieve all quizzes, error: ${error}`);
             return null;
         }
     }
