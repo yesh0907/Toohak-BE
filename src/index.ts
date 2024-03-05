@@ -4,9 +4,13 @@ import { logger } from "hono/logger";
 import { cors } from "hono/cors";
 import { startIOServer } from "./io";
 import { DbInterface } from "./database/db";
+import {initializeRoomVariables} from "./ioOperations";
 
 // Connect to DB
 const db = new DbInterface();
+
+// hacky way of creating a global state for tracking room variables
+export let perRoomVariables: {string, RoomVariables} = {};
 
 // Create Hono App
 const app = new Hono();
@@ -35,6 +39,7 @@ app.post("/create-room", async (c) => {
     if (roomId == null) {
         return c.json({ error: 'could not create room' }, 500);
     }
+    initializeRoomVariables(roomId, perRoomVariables);
     return c.json({ roomId });
 });
 

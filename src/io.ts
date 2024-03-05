@@ -8,19 +8,10 @@ import {
   setRoomToActive,
   setRoomToInactive,
 } from "./ioOperations";
-import { QuestionSchema } from "./database/schema";
+import {perRoomVariables} from "./index";
 
 const TIMEOUT = 31000;
 
-let recvQuestion = 0,
-  playerCount = 0,
-  questionIndex = 0,
-  recvAnswer = 0,
-  recvWaitForQuiz = 0;
-let question: QuestionSchema | undefined;
-let playerScores = new Map<string, number>();
-let playerAnswerTimeout: ReturnType<typeof setInterval>;
-let quizId = "";
 
 export const startIOServer = (httpServer: ServerType) => {
   const io = new IOServer(httpServer, {
@@ -36,11 +27,11 @@ export const startIOServer = (httpServer: ServerType) => {
   io.on("connection", (socket) => {
     console.log(`New client connected: ${socket.id}`);
 
-    socket.on(WS_EVENTS.JOIN_ROOM, (room_id: string) => {
-      console.log(`Room ID received: ${room_id}`);
+    socket.on(WS_EVENTS.JOIN_ROOM, (roomId: string) => {
+      console.log(`Room ID received: ${roomId}`);
 
       // join websocket "room" to listen for any room specific events
-      socket.join(room_id);
+      socket.join(roomId);
     });
 
     socket.on(
@@ -49,46 +40,47 @@ export const startIOServer = (httpServer: ServerType) => {
         console.log(`Player ${playerId} joined the room`);
         // add player to room in DB
         await addPlayerToRoom(roomId, playerId);
-        playerScores.set(playerId, 0);
         // let everyone else in the room know there is a new player
         io.to(roomId).emit(WS_EVENTS.NEW_PLAYER, { roomId, playerId });
-        playerCount++;
+        perRoomVariables[roomId].playerCount++;
+        perRoomVariables[roomId].playerScores.set(playerId, 0);
+        perRoomVariables[roomId].socketIdsConnected.add(socket.id);
       }
     );
 
     socket.on(WS_EVENTS.START_QUIZ, async (roomId: string, selectedQuizId: string) => {
-      questionIndex = 0;
+      perRoomVariables[roomId].questionIndex = 0;
       console.log(`${socket.id} started the game!`);
       // set room in DB to active
       await setRoomToActive(roomId);
-      questionIndex = 0;
-      quizId = selectedQuizId;
+      perRoomVariables[roomId].questionIndex = 0;
+      perRoomVariables[roomId].quizId = selectedQuizId;
       // storing question so that we can send correct answer without repetitive DB calls
       const { error, question: schema } = await getQuestionSchema(
-        quizId,
-        questionIndex
+        perRoomVariables[roomId].quizId,
+        perRoomVariables[roomId].questionIndex
       );
       if (error || schema == null) {
         console.error("start quiz: unable to get question");
         return;
       }
-      question = schema;
-      const data = convertQuestionSchemaToData(question);
+      perRoomVariables[roomId].question = schema;
+      const data = convertQuestionSchemaToData(perRoomVariables[roomId].question);
       io.to(roomId).emit(WS_EVENTS.NEW_QUESTION, data);
 
-      playerAnswerTimeout = setTimeout(() => {
-        io.to(roomId).emit(WS_EVENTS.SHOW_ANSWER, question?.CorrectAnswer);
+      perRoomVariables[roomId].playerAnswerTimeout = setTimeout(() => {
+        io.to(roomId).emit(WS_EVENTS.SHOW_ANSWER, perRoomVariables[roomId].question?.CorrectAnswer);
       }, TIMEOUT);
-      questionIndex++;
+      perRoomVariables[roomId].questionIndex++;
     });
 
     socket.on(WS_EVENTS.WAIT_FOR_QUIZ, async (roomId: string, playerId: string) => {
-      recvWaitForQuiz++;
-      if (recvWaitForQuiz === playerCount) {
+      perRoomVariables[roomId].recvWaitForQuiz++;
+      if (perRoomVariables[roomId].recvWaitForQuiz === perRoomVariables[roomId].playerCount) {
         // get next question
         const { error, question: schema } = await getQuestionSchema(
-          quizId,
-          questionIndex
+          perRoomVariables[roomId].quizId,
+          perRoomVariables[roomId].questionIndex
         );
         // check if question is undefined
         if (error) {
@@ -101,24 +93,25 @@ export const startIOServer = (httpServer: ServerType) => {
         if (schema == null) {
           console.log('quiz done');
           // sort leaderboard by scores and get top 3
-          const leaderboard = Array.from(playerScores.entries()).sort((a, b) => b[1] - a[1]).slice(0, 3);
-          const playerScore = playerScores.get(playerId) ?? 0;
+          const leaderboard = Array.from(perRoomVariables[roomId].playerScores.entries()).sort((a, b) => b[1] - a[1]).slice(0, 3);
+          const playerScore = perRoomVariables[roomId].playerScores.get(playerId) ?? 0;
           const data = {
             leaderboard, 
             playerScore,
           }
           await setRoomToInactive(roomId);
           io.to(roomId).emit(WS_EVENTS.QUIZ_COMPLETED, data);
+          delete perRoomVariables[roomId];
         } else {
           console.log('next question');
-          question = schema;
-          const data = convertQuestionSchemaToData(question);
+          perRoomVariables[roomId].question = schema;
+          const data = convertQuestionSchemaToData(perRoomVariables[roomId].question);
           io.to(roomId).emit(WS_EVENTS.NEW_QUESTION, data);
 
-          playerAnswerTimeout = setTimeout(() => {
-            io.to(roomId).emit(WS_EVENTS.SHOW_ANSWER, question?.CorrectAnswer);
+          perRoomVariables[roomId].playerAnswerTimeout = setTimeout(() => {
+            io.to(roomId).emit(WS_EVENTS.SHOW_ANSWER, perRoomVariables[roomId].question?.CorrectAnswer);
           }, TIMEOUT);
-          questionIndex++;
+          perRoomVariables[roomId].questionIndex++;
         }
       }
     });
@@ -133,12 +126,12 @@ export const startIOServer = (httpServer: ServerType) => {
 
     socket.on(WS_EVENTS.RECV_QUESTION, (roomId) => {
       console.log(`Received question`);
-      recvQuestion++;
-      if (recvQuestion === playerCount) {
+      perRoomVariables[roomId].recvQuestion++;
+      if (perRoomVariables[roomId].recvQuestion === perRoomVariables[roomId].playerCount) {
         io.to(roomId).emit(WS_EVENTS.START_TIMER);
-        recvQuestion = 0;
-        recvAnswer = 0;
-        recvWaitForQuiz = 0;
+        perRoomVariables[roomId].recvQuestion = 0;
+        perRoomVariables[roomId].recvAnswer = 0;
+        perRoomVariables[roomId].recvWaitForQuiz = 0;
       }
     });
 
@@ -153,22 +146,28 @@ export const startIOServer = (httpServer: ServerType) => {
     socket.on(
       WS_EVENTS.ANSWER_QUESTION,
       (roomId: string, playerId: string, answer: string) => {
-        recvAnswer++;
-        if (answer === question?.CorrectAnswer) {
-          const currentScore = playerScores.get(playerId) ?? 0;
-          playerScores.set(playerId, currentScore + 1);
+        perRoomVariables[roomId].recvAnswer++;
+        if (answer === perRoomVariables[roomId].question?.CorrectAnswer) {
+          const currentScore = perRoomVariables[roomId].playerScores.get(playerId) ?? 0;
+          perRoomVariables[roomId].playerScores.set(playerId, currentScore + 1);
         }
 
-        if (recvAnswer === playerCount) {
-          clearTimeout(playerAnswerTimeout);
-          io.to(roomId).emit(WS_EVENTS.SHOW_ANSWER, question?.CorrectAnswer);
+        if (perRoomVariables[roomId].recvAnswer === perRoomVariables[roomId].playerCount) {
+          clearTimeout(perRoomVariables[roomId].playerAnswerTimeout);
+          io.to(roomId).emit(WS_EVENTS.SHOW_ANSWER, perRoomVariables[roomId].question?.CorrectAnswer);
         }
       }
     );
 
     socket.on("disconnect", () => {
       console.log(`User disconnected: ${socket.id}`);
-      playerCount--;
+      for (const roomId in perRoomVariables) {
+        const roomVariables = perRoomVariables[roomId];
+        if (roomVariables.socketIdsConnected.has(socket.id)) {
+            perRoomVariables[roomId].playerCount--;
+            break;
+        }
+      }
     });
   });
 };
