@@ -6,7 +6,6 @@ import { startIOServer } from "./io";
 import { DbInterface } from "./database/db";
 import {RoomVariables, initializeRoomVariables} from "./ioOperations";
 
-
 // Connect to DB
 const db = new DbInterface();
 
