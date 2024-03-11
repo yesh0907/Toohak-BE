@@ -42,9 +42,11 @@ export const startIOServer = (httpServer: ServerType) => {
         await addPlayerToRoom(roomId, playerId);
         // let everyone else in the room know there is a new player
         io.to(roomId).emit(WS_EVENTS.NEW_PLAYER, { roomId, playerId });
-        perRoomVariables[roomId].playerCount++;
-        perRoomVariables[roomId].playerScores.set(playerId, 0);
-        perRoomVariables[roomId].socketIdsConnected.add(socket.id);
+        if (roomId in perRoomVariables) {
+          perRoomVariables[roomId].playerCount++;
+          perRoomVariables[roomId].playerScores.set(playerId, 0);
+          perRoomVariables[roomId].socketIdsConnected.add(socket.id);
+        }
       }
     );
 
