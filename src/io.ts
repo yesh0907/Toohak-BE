@@ -17,7 +17,7 @@ export const startIOServer = (httpServer: ServerType) => {
   const io = new IOServer(httpServer, {
     // Cross-Origin Resource Sharing
     cors: {
-      origin: "http://localhost:5173",
+      origin: "*",
       methods: ["GET", "POST"],
       credentials: true,
     },
