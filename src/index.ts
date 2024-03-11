@@ -4,13 +4,14 @@ import { logger } from "hono/logger";
 import { cors } from "hono/cors";
 import { startIOServer } from "./io";
 import { DbInterface } from "./database/db";
-import {initializeRoomVariables} from "./ioOperations";
+import {RoomVariables, initializeRoomVariables} from "./ioOperations";
+
 
 // Connect to DB
 const db = new DbInterface();
 
 // hacky way of creating a global state for tracking room variables
-export let perRoomVariables: {string, RoomVariables} = {};
+export let perRoomVariables: {[roomName: string]: RoomVariables} = {};
 
 // Create Hono App
 const app = new Hono();
@@ -19,7 +20,9 @@ const app = new Hono();
 app.use("*", logger());
 
 // Set up cors for all routes
-app.use(cors());
+app.use(cors({
+    origin: '*'
+}));
 
 // Starter route
 app.get("/", (c) => {

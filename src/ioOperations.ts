@@ -67,7 +67,8 @@ export interface RoomVariables {
     quizId: string;
     socketIdsConnected: Set<string>;
 }
-export function initializeRoomVariables(roomId: string, roomVariables: Map<string, RoomVariables>) {
+
+export function initializeRoomVariables(roomId: string, roomVariables: {[roomName: string]: RoomVariables}) {
     roomVariables[roomId] = {
         recvQuestion: 0,
         playerCount: 0,
