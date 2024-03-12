@@ -6,7 +6,6 @@ const db = new DbInterface();
 export async function getQuestionSchema(quizId: string, questionIndex: number) {
   const quiz = await db.getQuiz(quizId);
   if (!quiz) {
-    console.error(`quiz not found with id: ${quizId}`);
     return {
       error: true,
       question: null
@@ -23,7 +22,6 @@ export async function getQuestionSchema(quizId: string, questionIndex: number) {
 
   const question = await db.getQuestion(quiz.Questions[questionIndex]);
   if (!question) {
-    console.error(`question not found with id: ${quiz.Questions[questionIndex]}`);
     return {
       error: true,
       question: null
@@ -55,6 +53,7 @@ export async function addPlayerToRoom(roomId: string, playerId: string) {
   await db.appendPlayerIdToRoom(roomId, playerId);
 }
 
+// Room State Variables
 export interface RoomVariables {
     recvQuestion: number;
     playerCount: number;

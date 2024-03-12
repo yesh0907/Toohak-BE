@@ -12,6 +12,7 @@ if (process.env.MONGO_URI === undefined) {
 
 const uri = process.env.MONGO_URI;
 
+// Handles all DB queries
 class DbHandler {
     private static instance: DbHandler | null = null;
     
@@ -32,7 +33,7 @@ class DbHandler {
     }
 
     private async connect(): Promise<void> {
-        const connection = await mongoose.connect(uri);
+        await mongoose.connect(uri);
     }
 
     private async disconnect(): Promise<void> {
@@ -119,7 +120,7 @@ class DbHandler {
     }): Promise<void> {
         const quizModel = getModelForClass(QuizSchema);
         try {
-            const res = await quizModel.updateOne({ _id: quizId }, updateData);
+            await quizModel.updateOne({ _id: quizId }, updateData);
             console.log(`Quiz successfully updated with id: ${quizId}, collection: ${quizModel.collection.collectionName}, updated fields: ${Object.keys(updateData).join(', ')}`);
         } catch (error) {
             console.error(`Failed to update quiz fields: ${Object.keys(updateData).join(', ')}, with id: ${quizId}, collection: ${quizModel.collection.collectionName}, error:`, error);
@@ -158,7 +159,7 @@ class DbHandler {
     }): Promise<void> {
         const questionModel = getModelForClass(QuestionSchema);
         try {
-            const res = await questionModel.updateOne({ _id: questionId }, updateData);
+            await questionModel.updateOne({ _id: questionId }, updateData);
             console.log(`Question successfully updated with id: ${questionId}, collection: ${questionModel.collection.collectionName}, updated fields: ${Object.keys(updateData).join(', ')}`);
         } catch (error) {
             console.error(`Failed to update question fields: ${Object.keys(updateData).join(', ')}, with id ${questionId}, collection: ${questionModel.collection.collectionName}, error:`, error);
@@ -167,6 +168,7 @@ class DbHandler {
 
 }
 
+// Client interface for the DB
 class DbInterface {
     private db: DbHandler;
     
