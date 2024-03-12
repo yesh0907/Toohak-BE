@@ -9,7 +9,7 @@ import {RoomVariables, initializeRoomVariables} from "./ioOperations";
 // Connect to DB
 const db = new DbInterface();
 
-// hacky way of creating a global state for tracking room variables
+// creating a global state for tracking room variables
 export let perRoomVariables: {[roomName: string]: RoomVariables} = {};
 
 // Create Hono App

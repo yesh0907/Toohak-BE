@@ -1,3 +1,4 @@
+// Synchronized event file between frontend and backend
 export const WS_EVENTS = {
     JOIN_ROOM: 'joinRoom',
     NEW_PLAYER: 'newPlayer',
